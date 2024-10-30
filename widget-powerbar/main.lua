@@ -52,7 +52,7 @@ local function create()
         mah = 0,
         fuel = 0,
 
-        textColor = GREY(128),
+        textColor = BLACK,
 
         -- methods
         setReserve = function(widget, value)
@@ -60,7 +60,6 @@ local function create()
             widget.critical = widget.reserve > 0 and widget.reserve or 20
         end
     }
-    widget:setReserve(20)
 
     return widget
 end
@@ -106,23 +105,25 @@ local function paint(widget)
     local text_w, text_h = lcd.getTextSize("")
 
     -- voltage
-    if widget.voltageSensor then
+    if widget.voltageSensor and widget.volts then
         local text = string.format("%.1fv / %.2fv (%.0fs)", widget.volts, widget.volts / widget.cellCount, widget.cellCount)
         lcd.drawText(box_left + 8, 12, text)
     end
 
     -- mah
-    if widget.mahSensor then
+    if widget.mahSensor and widget.mah then
         local text = string.format("%.0f mah", widget.mah)
         lcd.drawText(box_left + 8, box_top + (box_height - text_h) - 4, text)
     end
 
     -- fuel
-    if widget.fuelSensor then
-        lcd.font(FONT_XXL)
+    lcd.font(FONT_XXL)
+    _, text_h = lcd.getTextSize("")
+    if widget.fuelSensor and widget.fuel then
         local text = string.format("%.0f%%", widget.fuel)
-        _, text_h = lcd.getTextSize("")
         lcd.drawText(box_left + box_width - 4, box_top + (box_height - text_h) + 2, text, RIGHT)
+    else
+        lcd.drawText(box_left + box_width - 4, box_top + (box_height - text_h) + 2, "--- %", RIGHT)
     end
 end
 
@@ -192,8 +193,8 @@ local function read(widget)
     widget.voltageSensor = storage.read("voltageSensor")
     widget.mahSensor = storage.read("mahSensor")
     widget.fuelSensor = storage.read("fuelSensor")
-    widget:setReserve(storage.read("reserve"))
-    widget.cellCount = storage.read("cellCount")
+    widget:setReserve(storage.read("reserve") or 20)
+    widget.cellCount = storage.read("cellCount") or 6
 end
 
 local function write(widget)
