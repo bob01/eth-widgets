@@ -30,94 +30,178 @@ local function name(widget)
 end
 
 local function create()
-    return { color=lcd.RGB(0xEA, 0x5E, 0x00), source=nil, min=-1024, max=1024, value=0 }
+    local widget =
+    {
+        -- legacy
+        color=lcd.RGB(0xEA, 0x5E, 0x00), 
+        source=nil, 
+        min=-1024, 
+        max=1024, 
+        value=0,
+
+        -- sensors
+        voltageSensor = nil,
+        mahSensor = nil,
+        fuelSensor = nil,
+
+        -- pack
+        cellCount = 12,
+
+        -- state
+        volts = 0,
+        mah = 0,
+        fuel = 0,
+
+        textColor = GREY(128),
+
+        -- methods
+        setReserve = function(widget, value)
+            widget.reserve = value
+            widget.critical = widget.reserve > 0 and widget.reserve or 20
+        end
+    }
+    widget:setReserve(20)
+
+    return widget
+end
+
+-- color for bar
+local function getBarColor(widget)
+    local critical = widget.reserve == 0 and widget.critical or 0
+    if widget.fuel <= critical then
+        -- red
+        return lcd.RGB(0xff, 0, 0)
+    elseif widget.fuel <= critical + 20 then
+        -- yellow
+        return lcd.RGB(0xff, 0xff, 0)
+    else
+        -- green
+        return lcd.RGB(0, 0xff, 0)
+    end
 end
 
 local function paint(widget)
     local w, h = lcd.getWindowSize()
 
-    if widget.source == nil then
-        return
-    end
-
     -- canvas
     local box_top, box_height = 2, h - 4
     local box_left, box_width = 2, w - 4
 
-    -- Compute percentage
-    local percent = (widget.value - widget.min) / (widget.max - widget.min) * 100
-    if percent > 100 then
-        percent = 100
-    elseif percent < 0 then
-        percent = 0
-    end
-
-    -- Gauge background
-    gauge_width = math.floor((((box_width - 2) / 100) * percent) + 2)
+    -- background
+    local fill = widget.fuel >= 0 and widget.fuel or 100
+    local bar_width = math.floor((((box_width - 2) / 100) * fill) + 2)
     lcd.color(lcd.RGB(200, 200, 200))
     lcd.drawFilledRectangle(box_left, box_top, box_width, box_height)
 
-    -- Gauge color
-    lcd.color(widget.color)
+    -- bar
+    lcd.color(getBarColor(widget))
+    lcd.drawFilledRectangle(box_left, box_top, bar_width, box_height)
 
-    -- Gauge bar
-    lcd.drawFilledRectangle(box_left, box_top, gauge_width, box_height)
-
-    -- Gauge frame outline
+    -- outline
     lcd.color(BLACK)
     lcd.drawRectangle(box_left, box_top, box_width, box_height)
 
     -- Source name and value
     lcd.font(FONT_L_BOLD)
     local text_w, text_h = lcd.getTextSize("")
-    lcd.drawText(box_left + 8, 12, "26.7v / 3.81v (12s)")
-    lcd.drawText(box_left + 8, box_top + (box_height - text_h) - 4, "4200 mah")
 
-    -- Gauge percentage
-    lcd.font(FONT_XXL)
-    text_w, text_h = lcd.getTextSize("")
-    lcd.drawText(box_left + box_width - 4, box_top + (box_height - text_h) + 2, math.floor(percent).."%", RIGHT)
-end
+    -- voltage
+    if widget.voltageSensor then
+        local text = string.format("%.1fv / %.2fv (%.0fs)", widget.volts, widget.volts / widget.cellCount, widget.cellCount)
+        lcd.drawText(box_left + 8, 12, text)
+    end
 
-local function wakeup(widget)
-    if widget.source then
-        local newValue = widget.source:value()
-        if widget.value ~= newValue then
-            widget.value = newValue
-            lcd.invalidate()
-        end
+    -- mah
+    if widget.mahSensor then
+        local text = string.format("%.0f mah", widget.mah)
+        lcd.drawText(box_left + 8, box_top + (box_height - text_h) - 4, text)
+    end
+
+    -- fuel
+    if widget.fuelSensor then
+        lcd.font(FONT_XXL)
+        local text = string.format("%.0f%%", widget.fuel)
+        _, text_h = lcd.getTextSize("")
+        lcd.drawText(box_left + box_width - 4, box_top + (box_height - text_h) + 2, text, RIGHT)
     end
 end
 
+local function wakeup(widget)
+    -- voltage
+    local volts
+    if widget.voltageSensor then
+        volts = widget.voltageSensor:value()
+    end
+    if widget.volts ~= volts then
+        widget.volts = volts
+        lcd.invalidate()
+    end
+
+    -- mah
+    local mah
+    if widget.mahSensor then
+       mah = widget.mahSensor:value()
+    end
+    if widget.mah ~= mah then
+        widget.mah = mah
+        lcd.invalidate()
+    end
+
+    -- fuel
+    local fuel
+    if widget.fuelSensor then
+        fuel = widget.fuelSensor:value()
+        if fuel < widget.reserve then
+            fuel = fuel - widget.reserve
+        else
+            local usable = 100 - widget.reserve
+            fuel = (fuel - widget.reserve) / usable * 100
+        end
+    else
+        fuel = 0
+    end
+    if widget.fuel ~= fuel then
+        widget.fuel = fuel
+        lcd.invalidate()
+    end
+
+    widget.textColor = BLACK
+end
+
 local function configure(widget)
-    -- Source choice
-    line = form.addLine("Source")
-    form.addSourceField(line, nil, function() return widget.source end, function(value) widget.source = value end)
+    -- Sensor choices
+    line = form.addLine("Voltage (v) Sensor")
+    form.addSourceField(line, nil, function() return widget.voltageSensor end, function(value) widget.voltageSensor = value end)
 
-    -- Color
-    line = form.addLine("Color")
-    form.addColorField(line, nil, function() return widget.color end, function(color) widget.color = color end)
+    line = form.addLine("Consumption (mAh) Sensor")
+    form.addSourceField(line, nil, function() return widget.mahSensor end, function(value) widget.mahSensor = value end)
 
-    -- Min & Max
-    line = form.addLine("Range")
-    local slots = form.getFieldSlots(line, {0, "-", 0})
-    form.addNumberField(line, slots[1], -1024, 1024, function() return widget.min end, function(value) widget.min = value end)
-    form.addStaticText(line, slots[2], "-")
-    form.addNumberField(line, slots[3], -1024, 1024, function() return widget.max end, function(value) widget.max = value end)
+    line = form.addLine("Fuel (%) Sensor")
+    form.addSourceField(line, nil, function() return widget.fuelSensor end, function(value) widget.fuelSensor = value end)
+
+    -- Reserve
+    line = form.addLine("Reserve")
+    form.addNumberField(line, nil, 0, 40, function() return widget.reserve end, function(value) widget:setReserve(value) end)
+    
+    -- Cell count
+    line = form.addLine("Cell Count")
+    form.addNumberField(line, nil, 2, 16, function() return widget.cellCount end, function(value) widget.cellCount = value end)
 end
 
 local function read(widget)
-    widget.source = storage.read("source")
-    widget.min = storage.read("min")
-    widget.max = storage.read("max")
-    widget.color = storage.read("color")
+    widget.voltageSensor = storage.read("voltageSensor")
+    widget.mahSensor = storage.read("mahSensor")
+    widget.fuelSensor = storage.read("fuelSensor")
+    widget:setReserve(storage.read("reserve"))
+    widget.cellCount = storage.read("cellCount")
 end
 
 local function write(widget)
-    storage.write("source", widget.source)
-    storage.write("min", widget.min)
-    storage.write("max", widget.max)
-    storage.write("color", widget.color)
+    storage.write("voltageSensor", widget.voltageSensor)
+    storage.write("mahSensor", widget.mahSensor)
+    storage.write("fuelSensor", widget.fuelSensor)
+    storage.write("reserve", widget.reserve)
+    storage.write("cellCount", widget.cellCount)
 end
 
 local function init()
