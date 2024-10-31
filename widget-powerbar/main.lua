@@ -22,6 +22,7 @@
 -- ver: 0.1.0
 ]]
 
+-- metadata
 local translations = { en="Powerbar" }
 
 local function name(widget)
@@ -29,6 +30,8 @@ local function name(widget)
     return translations[locale] or translations["en"]
 end
 
+
+-- ctor
 local function create()
     local widget =
     {
@@ -59,6 +62,7 @@ local function create()
     return widget
 end
 
+
 -- color for bar
 local function getBarColor(widget)
     local critical = widget.reserve == 0 and widget.critical or 0
@@ -74,6 +78,8 @@ local function getBarColor(widget)
     end
 end
 
+
+-- paint canvas
 local function paint(widget)
     local w, h = lcd.getWindowSize()
 
@@ -125,15 +131,16 @@ local function paint(widget)
     end
 end
 
+
+-- process
 local function wakeup(widget)
-    -- connection state
+    -- telemetry active?
     local linked = widget.voltageSensor and widget.voltageSensor:state()
     if widget.linked ~= linked then
         widget.linked = linked
         widget.textColor = linked and BLACK or lcd.GREY(0x7F)
         lcd.invalidate()
     end
-
 
     -- voltage
     local volts = widget.voltageSensor and widget.voltageSensor:value() or nil
@@ -168,6 +175,8 @@ local function wakeup(widget)
     end
 end
 
+
+-- config UI
 local function configure(widget)
     -- Sensor choices
     line = form.addLine("Voltage (v) Sensor")
@@ -182,12 +191,14 @@ local function configure(widget)
     -- Reserve
     line = form.addLine("Reserve")
     form.addNumberField(line, nil, 0, 40, function() return widget.reserve end, function(value) widget:setReserve(value) end)
-    
+
     -- Cell count
     line = form.addLine("Cell Count")
     form.addNumberField(line, nil, 2, 16, function() return widget.cellCount end, function(value) widget.cellCount = value end)
 end
 
+
+-- load config
 local function read(widget)
     widget.voltageSensor = storage.read("voltageSensor")
     widget.mahSensor = storage.read("mahSensor")
@@ -196,6 +207,8 @@ local function read(widget)
     widget.cellCount = storage.read("cellCount") or 6
 end
 
+
+-- save config
 local function write(widget)
     storage.write("voltageSensor", widget.voltageSensor)
     storage.write("mahSensor", widget.mahSensor)
@@ -204,8 +217,10 @@ local function write(widget)
     storage.write("cellCount", widget.cellCount)
 end
 
+
+-- initialize / register widget
 local function init()
     system.registerWidget({ key = "rngpbar", name = name, create = create, paint = paint, wakeup = wakeup, configure = configure, read = read, write = write })
 end
 
-return {init=init}
+return { init = init }
