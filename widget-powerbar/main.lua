@@ -19,10 +19,12 @@
 
 -- Author: Rob Gayle (bob00@rogers.com)
 -- Date: 2024
--- ver: 0.1.0
+-- ver: 0.9.0
 ]]
 
 -- metadata
+local widgetDir = "/scripts/widget-powerbar/"
+
 local translations = { en="Powerbar" }
 
 local function name(widget)
@@ -148,8 +150,7 @@ end
 -- call fuel consumption on the 10's (singles when critical)
 local function announceFuel(widget)
     -- silent if not linked or no fuel value
-    -- if not widget.linked or widget.fuel == nil then
-    if widget.fuel == nil then
+    if not widget.linked or widget.fuel == nil then
         return
     end
 
@@ -163,23 +164,23 @@ local function announceFuel(widget)
 
     -- time to report?
     if (widget.lastCapa ~= capa or capa <= 0) and getSysTime() > widget.nextCapa then
+        local locale = "en"
+
         -- urgency?
         local critical = widget.reserve == 0 and widget.critical or 0
         if capa > critical + widget.margin then
-            -- play battery
+            system.playFile(widgetDir .. "sounds/" .. locale .. "/battry.wav")
         elseif capa > critical then
-            -- play batlow
+            system.playFile(widgetDir .. "sounds/" .. locale .. "/batlow.wav")
         else
-            -- play batcrit
-            -- play haptic
+            system.playFile(widgetDir .. "sounds/" .. locale .. "/batcrt.wav")
+            -- system.playHaptic(". .")
         end
 
-        -- play capa if >= 0
-        if capa >= 0 then
+        -- -- play capa if >= 0
+        if capa > 0 then
             system.playNumber(capa, UNIT_PERCENT, 0)
         end
-
-        print(capa)
 
         -- schedule next
         widget.lastCapa = capa
