@@ -51,6 +51,20 @@ local function create()
         linked = false,
         textColor = BLACK,
 
+        -- pre-rendered text
+        textVolts = nil,
+        textMah = nil,
+        textFuel = nil,
+
+        -- audio state
+        lastCapa = 100,
+        nextCapa = 0,
+
+        --thresholds
+        reserve = nil,
+        critical = nil,
+        margin = 10,
+
         -- methods
         setReserve = function(widget, value)
             widget.reserve = value
@@ -81,9 +95,8 @@ end
 
 -- paint canvas
 local function paint(widget)
+    -- canvas dimensions
     local w, h = lcd.getWindowSize()
-
-    -- canvas
     local box_top, box_height = 2, h - 4
     local box_left, box_width = 2, w - 4
 
@@ -103,36 +116,79 @@ local function paint(widget)
     lcd.color(BLACK)
     lcd.drawRectangle(box_left, box_top, box_width, box_height)
 
-    -- Source name and value
+    -- text
     lcd.font(FONT_L_BOLD)
     lcd.color(widget.textColor)
-    local text_w, text_h = lcd.getTextSize("")
+    local _, text_h = lcd.getTextSize("")
 
     -- voltage
-    if widget.voltageSensor and widget.volts then
-        local text = string.format("%.1fv / %.2fv (%.0fs)", widget.volts, widget.volts / widget.cellCount, widget.cellCount)
-        lcd.drawText(box_left + 8, 12, text)
+    if widget.textVolts then
+        lcd.drawText(box_left + 8, 12, widget.textVolts)
     end
 
     -- mah
-    if widget.mahSensor and widget.mah then
-        local text = string.format("%.0f mah", widget.mah)
-        lcd.drawText(box_left + 8, box_top + (box_height - text_h) - 4, text)
+    if widget.textMah then
+        lcd.drawText(box_left + 8, box_top + (box_height - text_h) - 4, widget.textMah)
     end
 
     -- fuel
     lcd.font(FONT_XXL)
     _, text_h = lcd.getTextSize("")
-    if widget.fuelSensor and widget.fuel then
-        local text = string.format("%.0f%%", widget.fuel)
-        lcd.drawText(box_left + box_width - 4, box_top + (box_height - text_h) + 2, text, RIGHT)
+    lcd.drawText(box_left + box_width - 4, box_top + (box_height - text_h) + 2, widget.textFuel or "--- %", RIGHT)
+end
+
+
+-- get system time
+local function getSysTime()
+    local time = math.ceil(os.clock() * 1000)
+    return time
+end
+
+
+-- call fuel consumption on the 10's (singles when critical)
+local function announceFuel(widget)
+    -- silent if not linked or no fuel value
+    -- if not widget.linked or widget.fuel == nil then
+    if widget.fuel == nil then
+        return
+    end
+
+    -- report 10's if not critical
+    local capa
+    if widget.fuel > widget.critical then
+        capa = math.ceil(widget.fuel / 10) * 10
     else
-        lcd.drawText(box_left + box_width - 4, box_top + (box_height - text_h) + 2, "--- %", RIGHT)
+        capa = math.ceil(widget.fuel)
+    end
+
+    -- time to report?
+    if (widget.lastCapa ~= capa or capa <= 0) and getSysTime() > widget.nextCapa then
+        -- urgency?
+        local critical = widget.reserve == 0 and widget.critical or 0
+        if capa > critical + widget.margin then
+            -- play battery
+        elseif capa > critical then
+            -- play batlow
+        else
+            -- play batcrit
+            -- play haptic
+        end
+
+        -- play capa if >= 0
+        if capa >= 0 then
+            system.playNumber(capa, UNIT_PERCENT, 0)
+        end
+
+        print(capa)
+
+        -- schedule next
+        widget.lastCapa = capa
+        widget.nextCapa = getSysTime() + 5000
     end
 end
 
 
--- process
+-- process sensors, pre-render and announce
 local function wakeup(widget)
     -- telemetry active?
     local linked = widget.voltageSensor and widget.voltageSensor:state()
@@ -146,6 +202,7 @@ local function wakeup(widget)
     local volts = widget.voltageSensor and widget.voltageSensor:value() or nil
     if widget.volts ~= volts then
         widget.volts = volts
+        widget.textVolts = volts and string.format("%.1fv / %.2fv (%.0fs)", volts, volts / widget.cellCount, widget.cellCount) or nil
         lcd.invalidate()
     end
 
@@ -153,6 +210,7 @@ local function wakeup(widget)
     local mah = widget.mahSensor and widget.mahSensor:value() or nil
     if widget.mah ~= mah then
         widget.mah = mah
+        widget.textMah = mah and string.format("%.0f mah", mah) or nil
         lcd.invalidate()
     end
 
@@ -171,8 +229,11 @@ local function wakeup(widget)
     end
     if widget.fuel ~= fuel then
         widget.fuel = fuel
+        widget.textFuel = fuel and string.format("%.0f%%", fuel) or nil
         lcd.invalidate()
     end
+
+    announceFuel(widget)
 end
 
 
