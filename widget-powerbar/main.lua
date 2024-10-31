@@ -32,13 +32,6 @@ end
 local function create()
     local widget =
     {
-        -- legacy
-        color=lcd.RGB(0xEA, 0x5E, 0x00), 
-        source=nil, 
-        min=-1024, 
-        max=1024, 
-        value=0,
-
         -- sensors
         voltageSensor = nil,
         mahSensor = nil,
@@ -48,10 +41,11 @@ local function create()
         cellCount = 12,
 
         -- state
-        volts = 0,
-        mah = 0,
-        fuel = 0,
+        volts = nil,
+        mah = nil,
+        fuel = nil,
 
+        linked = false,
         textColor = BLACK,
 
         -- methods
@@ -87,14 +81,16 @@ local function paint(widget)
     local box_left, box_width = 2, w - 4
 
     -- background
-    local fill = widget.fuel >= 0 and widget.fuel or 100
-    local bar_width = math.floor((((box_width - 2) / 100) * fill) + 2)
     lcd.color(lcd.RGB(200, 200, 200))
     lcd.drawFilledRectangle(box_left, box_top, box_width, box_height)
 
     -- bar
-    lcd.color(getBarColor(widget))
-    lcd.drawFilledRectangle(box_left, box_top, bar_width, box_height)
+    if widget.fuel then
+        local fill = widget.fuel >= 0 and widget.fuel or 100
+        local bar_width = math.floor((((box_width - 2) / 100) * fill) + 2)
+        lcd.color(getBarColor(widget))
+        lcd.drawFilledRectangle(box_left, box_top, bar_width, box_height)
+    end
 
     -- outline
     lcd.color(BLACK)
@@ -102,6 +98,7 @@ local function paint(widget)
 
     -- Source name and value
     lcd.font(FONT_L_BOLD)
+    lcd.color(widget.textColor)
     local text_w, text_h = lcd.getTextSize("")
 
     -- voltage
@@ -128,45 +125,46 @@ local function paint(widget)
 end
 
 local function wakeup(widget)
-    -- voltage
-    local volts
-    if widget.voltageSensor then
-        volts = widget.voltageSensor:value()
+    -- connection state
+    local linked = widget.voltageSensor and widget.voltageSensor:state()
+    if widget.linked ~= linked then
+        widget.linked = linked
+        widget.textColor = linked and BLACK or lcd.GREY(0x30)
+        lcd.invalidate()
     end
+
+
+    -- voltage
+    local volts = widget.voltageSensor and widget.voltageSensor:value() or nil
     if widget.volts ~= volts then
         widget.volts = volts
         lcd.invalidate()
     end
 
     -- mah
-    local mah
-    if widget.mahSensor then
-       mah = widget.mahSensor:value()
-    end
+    local mah = widget.mahSensor and widget.mahSensor:value() or nil
     if widget.mah ~= mah then
         widget.mah = mah
         lcd.invalidate()
     end
 
     -- fuel
-    local fuel
+    local fuel = nil
     if widget.fuelSensor then
         fuel = widget.fuelSensor:value()
-        if fuel < widget.reserve then
-            fuel = fuel - widget.reserve
-        else
-            local usable = 100 - widget.reserve
-            fuel = (fuel - widget.reserve) / usable * 100
+        if fuel then
+            if fuel < widget.reserve then
+                fuel = fuel - widget.reserve
+            else
+                local usable = 100 - widget.reserve
+                fuel = (fuel - widget.reserve) / usable * 100
+            end
         end
-    else
-        fuel = 0
     end
     if widget.fuel ~= fuel then
         widget.fuel = fuel
         lcd.invalidate()
     end
-
-    widget.textColor = BLACK
 end
 
 local function configure(widget)
@@ -206,7 +204,7 @@ local function write(widget)
 end
 
 local function init()
-    system.registerWidget({key="rngpbar", name=name, create=create, paint=paint, wakeup=wakeup, configure=configure, read=read, write=write})
+    system.registerWidget({ key = "rngpbar", name = name, create = create, paint = paint, wakeup = wakeup, configure = configure, read = read, write = write })
 end
 
 return {init=init}
