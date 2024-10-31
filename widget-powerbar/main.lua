@@ -200,16 +200,16 @@ local function wakeup(widget)
     end
 
     -- voltage
-    local volts = widget.voltageSensor and widget.voltageSensor:value() or nil
-    if widget.volts ~= volts then
+    local volts = widget.linked and widget.voltageSensor and widget.voltageSensor:value() or nil
+    if volts and widget.volts ~= volts then
         widget.volts = volts
         widget.textVolts = volts and string.format("%.1fv / %.2fv (%.0fs)", volts, volts / widget.cellCount, widget.cellCount) or nil
         lcd.invalidate()
     end
 
     -- mah
-    local mah = widget.mahSensor and widget.mahSensor:value() or nil
-    if widget.mah ~= mah then
+    local mah = widget.linked and widget.mahSensor and widget.mahSensor:value() or nil
+    if mah and widget.mah ~= mah then
         widget.mah = mah
         widget.textMah = mah and string.format("%.0f mah", mah) or nil
         lcd.invalidate()
@@ -217,7 +217,7 @@ local function wakeup(widget)
 
     -- fuel
     local fuel = nil
-    if widget.fuelSensor then
+    if widget.linked and widget.fuelSensor then
         fuel = widget.fuelSensor:value()
         if fuel then
             if fuel < widget.reserve then
@@ -228,7 +228,7 @@ local function wakeup(widget)
             end
         end
     end
-    if widget.fuel ~= fuel then
+    if fuel and widget.fuel ~= fuel then
         widget.fuel = fuel
         widget.textFuel = fuel and string.format("%.0f%%", fuel) or nil
         lcd.invalidate()
