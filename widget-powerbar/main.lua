@@ -130,7 +130,7 @@ local function wakeup(widget)
     local linked = widget.voltageSensor and widget.voltageSensor:state()
     if widget.linked ~= linked then
         widget.linked = linked
-        widget.textColor = linked and BLACK or lcd.GREY(0x30)
+        widget.textColor = linked and BLACK or lcd.GREY(0x7F)
         lcd.invalidate()
     end
 
