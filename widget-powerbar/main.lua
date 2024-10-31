@@ -38,7 +38,7 @@ local function create()
         fuelSensor = nil,
 
         -- pack
-        cellCount = 12,
+        cellCount = 6,
 
         -- state
         volts = nil,
@@ -54,6 +54,7 @@ local function create()
             widget.critical = widget.reserve > 0 and widget.reserve or 20
         end
     }
+    widget:setReserve(20)
 
     return widget
 end
@@ -86,7 +87,7 @@ local function paint(widget)
 
     -- bar
     if widget.fuel then
-        local fill = widget.fuel >= 0 and widget.fuel or 100
+        local fill = widget.fuel > 0 and widget.fuel or 100
         local bar_width = math.floor((((box_width - 2) / 100) * fill) + 2)
         lcd.color(getBarColor(widget))
         lcd.drawFilledRectangle(box_left, box_top, bar_width, box_height)
