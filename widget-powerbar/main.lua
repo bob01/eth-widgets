@@ -19,7 +19,7 @@
 
 -- Author: Rob Gayle (bob00@rogers.com)
 -- Date: 2024
--- ver: 0.9.0
+-- ver: 0.9.1
 ]]
 
 -- metadata
@@ -41,6 +41,9 @@ local function create()
         voltageSensor = nil,
         mahSensor = nil,
         fuelSensor = nil,
+
+        -- display
+        minimal = false,
 
         -- pack
         cellCount = 6,
@@ -112,6 +115,9 @@ local function paint(widget)
         local bar_width = math.floor((((box_width - 2) / 100) * fill) + 2)
         lcd.color(getBarColor(widget))
         lcd.drawFilledRectangle(box_left, box_top, bar_width, box_height)
+
+        lcd.color(lcd.RGB(160, 160, 160))
+        lcd.drawLine(box_left + bar_width, box_top, box_left + bar_width, box_top + box_height)
     end
 
     -- outline
@@ -119,17 +125,19 @@ local function paint(widget)
     lcd.drawRectangle(box_left, box_top, box_width, box_height)
 
     -- text
-    lcd.font(FONT_L_BOLD)
     lcd.color(widget.textColor)
-    local _, text_h = lcd.getTextSize("")
 
     -- voltage
     if widget.textVolts then
+        lcd.font(widget.minimal and FONT_XL or FONT_L_BOLD)
+        local _, text_h = lcd.getTextSize("")
         lcd.drawText(box_left + 8, 12, widget.textVolts)
     end
 
     -- mah
     if widget.textMah then
+        lcd.font(FONT_L_BOLD)
+        local _, text_h = lcd.getTextSize("")
         lcd.drawText(box_left + 8, box_top + (box_height - text_h) - 4, widget.textMah)
     end
 
@@ -164,22 +172,25 @@ local function announceFuel(widget)
 
     -- time to report?
     if (widget.lastCapa ~= capa or capa <= 0) and getSysTime() > widget.nextCapa then
-        local locale = "en"
+        -- skip initial report
+        if widget.nextCapa ~= 0 then
+            local locale = "en"
 
-        -- urgency?
-        local critical = widget.reserve == 0 and widget.critical or 0
-        if capa > critical + widget.margin then
-            system.playFile(widgetDir .. "sounds/" .. locale .. "/battry.wav")
-        elseif capa > critical then
-            system.playFile(widgetDir .. "sounds/" .. locale .. "/batlow.wav")
-        else
-            system.playFile(widgetDir .. "sounds/" .. locale .. "/batcrt.wav")
-            -- system.playHaptic(". .")
-        end
+            -- urgency?
+            local critical = widget.reserve == 0 and widget.critical or 0
+            if capa > critical + widget.margin then
+                system.playFile(widgetDir .. "sounds/" .. locale .. "/battry.wav")
+            elseif capa > critical then
+                system.playFile(widgetDir .. "sounds/" .. locale .. "/batlow.wav")
+            else
+                system.playFile(widgetDir .. "sounds/" .. locale .. "/batcrt.wav")
+                -- system.playHaptic(". .")
+            end
 
-        -- -- play capa if >= 0
-        if capa > 0 then
-            system.playNumber(capa, UNIT_PERCENT, 0)
+            -- -- play capa if >= 0
+            if capa > 0 then
+                system.playNumber(capa, UNIT_PERCENT, 0)
+            end
         end
 
         -- schedule next
@@ -203,7 +214,9 @@ local function wakeup(widget)
     local volts = widget.linked and widget.voltageSensor and widget.voltageSensor:value() or nil
     if volts and widget.volts ~= volts then
         widget.volts = volts
-        widget.textVolts = volts and string.format("%.1fv / %.2fv (%.0fs)", volts, volts / widget.cellCount, widget.cellCount) or nil
+        widget.textVolts = volts
+            and (widget.minimal and string.format("%.2fv", volts / widget.cellCount) or string.format("%.1fv / %.2fv (%.0fs)", volts, volts / widget.cellCount, widget.cellCount))
+            or nil
         lcd.invalidate()
     end
 
@@ -257,6 +270,10 @@ local function configure(widget)
     -- Cell count
     line = form.addLine("Cell Count")
     form.addNumberField(line, nil, 2, 16, function() return widget.cellCount end, function(value) widget.cellCount = value end)
+
+    -- minimal display
+    line = form.addLine("Minimal Display")
+    form.addBooleanField(line, nil, function() return widget.minimal end, function(newValue) widget.volts = nil widget.minimal = newValue end)
 end
 
 
@@ -267,6 +284,7 @@ local function read(widget)
     widget.fuelSensor = storage.read("fuelSensor")
     widget:setReserve(storage.read("reserve") or 20)
     widget.cellCount = storage.read("cellCount") or 6
+    widget.minimal = storage.read("minimal") or false
 end
 
 
@@ -277,6 +295,7 @@ local function write(widget)
     storage.write("fuelSensor", widget.fuelSensor)
     storage.write("reserve", widget.reserve)
     storage.write("cellCount", widget.cellCount)
+    storage.write("minimal", widget.minimal)
 end
 
 
