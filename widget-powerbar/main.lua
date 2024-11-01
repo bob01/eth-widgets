@@ -16,11 +16,10 @@
 # GNU General Public License for more details.                          #
 #                                                                       #
 #########################################################################
-
+]]
 -- Author: Rob Gayle (bob00@rogers.com)
 -- Date: 2024
--- ver: 0.9.1
-]]
+local version = "v0.9.2"
 
 -- metadata
 local widgetDir = "/scripts/widget-powerbar/"
@@ -215,7 +214,7 @@ local function wakeup(widget)
     if volts and widget.volts ~= volts then
         widget.volts = volts
         widget.textVolts = volts
-            and (widget.minimal and string.format("%.2fv", volts / widget.cellCount) or string.format("%.1fv / %.2fv (%.0fs)", volts, volts / widget.cellCount, widget.cellCount))
+            and (widget.minimal and string.format("%.2fv", volts / widget.cellCount) or string.format("%.1fv / %.2fv", volts, volts / widget.cellCount))
             or nil
         lcd.invalidate()
     end
@@ -274,6 +273,10 @@ local function configure(widget)
     -- minimal display
     line = form.addLine("Minimal Display")
     form.addBooleanField(line, nil, function() return widget.minimal end, function(newValue) widget.volts = nil widget.minimal = newValue end)
+
+    -- version
+    line = form.addLine("Version")
+    form.addStaticText(line, nil, version)
 end
 
 
