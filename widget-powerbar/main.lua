@@ -19,7 +19,7 @@
 ]]
 -- Author: Rob Gayle (bob00@rogers.com)
 -- Date: 2024
-local version = "v0.9.2"
+local version = "v0.9.3"
 
 -- metadata
 local widgetDir = "/scripts/widget-powerbar/"
@@ -65,17 +65,14 @@ local function create()
         nextCapa = 0,
 
         --thresholds
-        reserve = nil,
-        critical = nil,
-        margin = 10,
+        reserve = 20,
+        low = 10,
 
         -- methods
-        setReserve = function(widget, value)
-            widget.reserve = value
-            widget.critical = widget.reserve > 0 and widget.reserve or 20
+        getCritical = function (widget)
+            return widget.reserve > 0 and 0 or 20
         end
     }
-    widget:setReserve(20)
 
     return widget
 end
@@ -83,7 +80,7 @@ end
 
 -- color for bar
 local function getBarColor(widget)
-    local critical = widget.reserve == 0 and widget.critical or 0
+    local critical = widget:getCritical()
     if widget.fuel <= critical then
         -- red
         return lcd.RGB(0xff, 0, 0)
@@ -161,9 +158,11 @@ local function announceFuel(widget)
         return
     end
 
-    -- report 10's if not critical
+    local critical = widget:getCritical()
+
+    -- report 10's if not below low threshold
     local capa
-    if widget.fuel > widget.critical then
+    if widget.fuel > critical + widget.low then
         capa = math.ceil(widget.fuel / 10) * 10
     else
         capa = math.ceil(widget.fuel)
@@ -176,8 +175,7 @@ local function announceFuel(widget)
             local locale = "en"
 
             -- urgency?
-            local critical = widget.reserve == 0 and widget.critical or 0
-            if capa > critical + widget.margin then
+            if capa > critical + widget.low then
                 system.playFile(widgetDir .. "sounds/" .. locale .. "/battry.wav")
             elseif capa > critical then
                 system.playFile(widgetDir .. "sounds/" .. locale .. "/batlow.wav")
@@ -264,7 +262,11 @@ local function configure(widget)
 
     -- Reserve
     line = form.addLine("Reserve")
-    form.addNumberField(line, nil, 0, 40, function() return widget.reserve end, function(value) widget:setReserve(value) end)
+    form.addNumberField(line, nil, 0, 40, function() return widget.reserve end, function(value) widget.reserve = value end)
+
+    -- Low threshold
+    line = form.addLine("Low Battery Threshold (%)")
+    form.addNumberField(line, nil, 0, 30, function() return widget.low end, function(value) widget.low = value end)
 
     -- Cell count
     line = form.addLine("Cell Count")
@@ -285,7 +287,8 @@ local function read(widget)
     widget.voltageSensor = storage.read("voltageSensor")
     widget.mahSensor = storage.read("mahSensor")
     widget.fuelSensor = storage.read("fuelSensor")
-    widget:setReserve(storage.read("reserve") or 20)
+    widget.reserve = storage.read("reserve") or 20
+    widget.low = storage.read("low") or 10
     widget.cellCount = storage.read("cellCount") or 6
     widget.minimal = storage.read("minimal") or false
 end
@@ -297,6 +300,7 @@ local function write(widget)
     storage.write("mahSensor", widget.mahSensor)
     storage.write("fuelSensor", widget.fuelSensor)
     storage.write("reserve", widget.reserve)
+    storage.write("low", widget.low)
     storage.write("cellCount", widget.cellCount)
     storage.write("minimal", widget.minimal)
 end
