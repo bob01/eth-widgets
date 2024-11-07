@@ -19,7 +19,7 @@
 ]]
 -- Author: Rob Gayle (bob00@rogers.com)
 -- Date: 2024
-local version = "v0.9.3"
+local version = "v0.9.4"
 
 -- metadata
 local widgetDir = "/scripts/widget-powerbar/"
@@ -261,16 +261,22 @@ local function configure(widget)
     form.addSourceField(line, nil, function() return widget.fuelSensor end, function(value) widget.fuelSensor = value end)
 
     -- Reserve
-    line = form.addLine("Reserve")
-    form.addNumberField(line, nil, 0, 40, function() return widget.reserve end, function(value) widget.reserve = value end)
+    line = form.addLine("LiPo Reserve (%)")
+    local field = form.addNumberField(line, nil, 0, 40, function() return widget.reserve end, function(value) widget.reserve = value end)
+    field:suffix("%")
+    field:default(20)
 
     -- Low threshold
     line = form.addLine("Low Battery Threshold (%)")
-    form.addNumberField(line, nil, 0, 30, function() return widget.low end, function(value) widget.low = value end)
+    field = form.addNumberField(line, nil, 0, 30, function() return widget.low end, function(value) widget.low = value end)
+    field:suffix("%")
+    field:default(10)
 
     -- Cell count
     line = form.addLine("Cell Count")
-    form.addNumberField(line, nil, 2, 16, function() return widget.cellCount end, function(value) widget.cellCount = value end)
+    field = form.addNumberField(line, nil, 2, 16, function() return widget.cellCount end, function(value) widget.cellCount = value end)
+    field:suffix("s")
+    field:default(6)
 
     -- minimal display
     line = form.addLine("Minimal Display")
