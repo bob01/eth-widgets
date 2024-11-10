@@ -19,7 +19,7 @@
 ]]
 -- Author: Rob Gayle (bob00@rogers.com)
 -- Date: 2024
-local version = "v0.9.4"
+local version = "v0.9.5"
 
 -- metadata
 local widgetDir = "/scripts/widget-powerbar/"
@@ -30,6 +30,12 @@ local function name(widget)
     local locale = system.getLocale()
     return translations[locale] or translations["en"]
 end
+
+
+-- types
+local ALERTLEVEL_NONE       = 0
+local ALERTLEVEL_LOW        = 1
+local ALERTLEVEL_CRITICAL   = 2
 
 
 -- ctor
@@ -67,6 +73,16 @@ local function create()
         --thresholds
         reserve = 20,
         low = 10,
+
+        -- alerts
+        alertActiveCondition = nil,
+        alertCellLow = 345,
+        alertCellCitical = 330,
+        alertPending = 0,
+        alertPendingDelay = 500,
+        alertLevel = ALERTLEVEL_NONE,
+        alertNext = 0,
+        alertNextDelay = 5000,
 
         -- methods
         getCritical = function (widget)
@@ -152,7 +168,7 @@ end
 
 
 -- call fuel consumption on the 10's (singles when critical)
-local function announceFuel(widget)
+local function crankFuelCalls(widget)
     -- silent if not linked or no fuel value
     if not widget.linked or widget.fuel == nil then
         return
@@ -172,9 +188,8 @@ local function announceFuel(widget)
     if (widget.lastCapa ~= capa or capa <= 0) and getSysTime() > widget.nextCapa then
         -- skip initial report
         if widget.nextCapa ~= 0 then
-            local locale = "en"
-
             -- urgency?
+            local locale = "en"
             if capa > critical + widget.low then
                 system.playFile(widgetDir .. "sounds/" .. locale .. "/battry.wav")
             elseif capa > critical then
@@ -193,6 +208,76 @@ local function announceFuel(widget)
         -- schedule next
         widget.lastCapa = capa
         widget.nextCapa = getSysTime() + 5000
+    end
+end
+
+
+-- audio voltage alerts
+local function crankVoltageAlerts(widget)
+    -- bail if active condition not set or met
+    if widget.alertActiveCondition then
+        local active = widget.alertActiveCondition:value()
+        if not active or active < 0 then
+            return
+        end
+    else
+        return
+    end
+
+    -- bail if not linked or no voltage value
+    if not widget.linked or widget.volts == nil then
+        return
+    end
+
+    -- bail if in delay
+    local now = getSysTime()
+    if now < widget.alertNext then
+        return
+    end
+
+    -- we will be working w/ per cell voltage (x100 for 2 place decimal prec)
+    local prec = 100
+    local cellv = widget.volts / widget.cellCount
+    cellv = math.floor(cellv * prec)
+
+    local alertLevel = (cellv <= widget.alertCellCitical and ALERTLEVEL_CRITICAL) or (cellv <= widget.alertCellLow and ALERTLEVEL_LOW) or ALERTLEVEL_NONE
+
+    if widget.alertPending ~= 0 then
+        -- in alert state
+        if alertLevel == ALERTLEVEL_NONE then
+            -- exit alert state alert condition cleared while pending
+            widget.alertPending = 0
+            return
+        elseif alertLevel < widget.alertLevel then
+            -- reduce alert level if less critical level seen while pending
+            widget.alertLevel = alertLevel
+        end
+
+        -- trigger if delay elapsed
+        if now >= widget.alertPending then
+            -- alert
+            local locale = "en"
+            if alertLevel == ALERTLEVEL_LOW then
+                system.playFile(widgetDir .. "sounds/" .. locale .. "/batlow.wav")
+            elseif alertLevel == ALERTLEVEL_CRITICAL then
+                system.playFile(widgetDir .. "sounds/" .. locale .. "/batcrt.wav")
+
+            end
+            -- report total voltage until https://github.com/FrSkyRC/ETHOS-Feedback-Community/issues/4708 addressed
+            -- system.playNumber(cellv / prec, UNIT_VOLT, 2)
+            system.playNumber(widget.volts, UNIT_VOLT, 1)
+
+            -- start delay
+            widget.alertNext = now + widget.alertNextDelay
+
+            -- exit alert state
+            widget.alertPending = 0
+            return
+        end
+    elseif alertLevel > ALERTLEVEL_NONE then
+        -- enter alert state
+        widget.alertLevel = alertLevel
+        widget.alertPending = now + widget.alertPendingDelay
     end
 end
 
@@ -244,43 +329,62 @@ local function wakeup(widget)
         lcd.invalidate()
     end
 
-    announceFuel(widget)
+    crankFuelCalls(widget)
+    crankVoltageAlerts(widget)
 end
 
 
 -- config UI
 local function configure(widget)
     -- Sensor choices
-    line = form.addLine("Voltage (v) Sensor")
+    line = form.addLine("Voltage (v) sensor")
     form.addSourceField(line, nil, function() return widget.voltageSensor end, function(value) widget.voltageSensor = value end)
 
-    line = form.addLine("Consumption (mAh) Sensor")
+    line = form.addLine("Consumption (mAh) sensor")
     form.addSourceField(line, nil, function() return widget.mahSensor end, function(value) widget.mahSensor = value end)
 
-    line = form.addLine("Fuel (%) Sensor")
+    line = form.addLine("Fuel (%) sensor")
     form.addSourceField(line, nil, function() return widget.fuelSensor end, function(value) widget.fuelSensor = value end)
 
     -- Reserve
-    line = form.addLine("LiPo Reserve (%)")
+    line = form.addLine("LiPo reserve (%)")
     local field = form.addNumberField(line, nil, 0, 40, function() return widget.reserve end, function(value) widget.reserve = value end)
     field:suffix("%")
     field:default(20)
 
     -- Low threshold
-    line = form.addLine("Low Battery Threshold (%)")
+    line = form.addLine("Low battery threshold (%)")
     field = form.addNumberField(line, nil, 0, 30, function() return widget.low end, function(value) widget.low = value end)
     field:suffix("%")
     field:default(10)
 
     -- Cell count
-    line = form.addLine("Cell Count")
+    line = form.addLine("Cell count")
     field = form.addNumberField(line, nil, 2, 16, function() return widget.cellCount end, function(value) widget.cellCount = value end)
     field:suffix("s")
     field:default(6)
 
     -- minimal display
-    line = form.addLine("Minimal Display")
+    line = form.addLine("Minimal display")
     form.addBooleanField(line, nil, function() return widget.minimal end, function(newValue) widget.volts = nil widget.minimal = newValue end)
+
+    -- Alerts
+    line = form.addLine("Voltage alerts")
+
+    line = form.addLine("Active condition")
+    form.addSourceField(line, nil, function() return widget.alertActiveCondition end, function(value) widget.alertActiveCondition = value end)
+
+    line = form.addLine("Low cell voltage (v)")
+    field = form.addNumberField(line, nil, 0, 440, function() return widget.alertCellLow end, function(value) widget.alertCellLow = value end)
+    field:suffix("v")
+    field:default(345)
+    field:decimals(2)
+
+    line = form.addLine("Critical cell voltage (v)")
+    field = form.addNumberField(line, nil, 0, 440, function() return widget.alertCellCitical end, function(value) widget.alertCellCitical = value end)
+    field:suffix("v")
+    field:default(330)
+    field:decimals(2)
 
     -- version
     line = form.addLine("Version")
@@ -293,10 +397,13 @@ local function read(widget)
     widget.voltageSensor = storage.read("voltageSensor")
     widget.mahSensor = storage.read("mahSensor")
     widget.fuelSensor = storage.read("fuelSensor")
-    widget.reserve = storage.read("reserve") or 20
-    widget.low = storage.read("low") or 10
-    widget.cellCount = storage.read("cellCount") or 6
-    widget.minimal = storage.read("minimal") or false
+    widget.reserve = storage.read("reserve")
+    widget.low = storage.read("low")
+    widget.cellCount = storage.read("cellCount")
+    widget.minimal = storage.read("minimal")
+    widget.alertCellLow = storage.read("alertCellLow")
+    widget.alertCellCitical = storage.read("alertCellCitical")
+    widget.alertActiveCondition = storage.read("alertActiveCondition")
 end
 
 
@@ -309,6 +416,9 @@ local function write(widget)
     storage.write("low", widget.low)
     storage.write("cellCount", widget.cellCount)
     storage.write("minimal", widget.minimal)
+    storage.write("alertCellLow", widget.alertCellLow)
+    storage.write("alertCellCitical", widget.alertCellCitical)
+    storage.write("alertActiveCondition", widget.alertActiveCondition)
 end
 
 
