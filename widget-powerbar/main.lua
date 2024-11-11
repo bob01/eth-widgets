@@ -19,7 +19,7 @@
 ]]
 -- Author: Rob Gayle (bob00@rogers.com)
 -- Date: 2024
-local version = "v0.9.5"
+local version = "v0.9.6"
 
 -- metadata
 local widgetDir = "/scripts/widget-powerbar/"
@@ -79,10 +79,10 @@ local function create()
         alertCellLow = 345,
         alertCellCitical = 330,
         alertPending = 0,
-        alertPendingDelay = 500,
+        alertSampleDuration = 500,
         alertLevel = ALERTLEVEL_NONE,
         alertNext = 0,
-        alertNextDelay = 5000,
+        alertRepeatInterval = 5000,
 
         -- methods
         getCritical = function (widget)
@@ -261,14 +261,13 @@ local function crankVoltageAlerts(widget)
                 system.playFile(widgetDir .. "sounds/" .. locale .. "/batlow.wav")
             elseif alertLevel == ALERTLEVEL_CRITICAL then
                 system.playFile(widgetDir .. "sounds/" .. locale .. "/batcrt.wav")
-
             end
             -- report total voltage until https://github.com/FrSkyRC/ETHOS-Feedback-Community/issues/4708 addressed
             -- system.playNumber(cellv / prec, UNIT_VOLT, 2)
             system.playNumber(widget.volts, UNIT_VOLT, 1)
 
             -- start delay
-            widget.alertNext = now + widget.alertNextDelay
+            widget.alertNext = now + widget.alertRepeatInterval
 
             -- exit alert state
             widget.alertPending = 0
@@ -277,7 +276,7 @@ local function crankVoltageAlerts(widget)
     elseif alertLevel > ALERTLEVEL_NONE then
         -- enter alert state
         widget.alertLevel = alertLevel
-        widget.alertPending = now + widget.alertPendingDelay
+        widget.alertPending = now + widget.alertSampleDuration
     end
 end
 
@@ -365,26 +364,38 @@ local function configure(widget)
     field:default(6)
 
     -- minimal display
-    line = form.addLine("Minimal display")
-    form.addBooleanField(line, nil, function() return widget.minimal end, function(newValue) widget.volts = nil widget.minimal = newValue end)
+    line = form.addLine("Reduced voltage display")
+    field = form.addBooleanField(line, nil, function() return widget.minimal end, function(newValue) widget.volts = nil widget.minimal = newValue end)
 
     -- Alerts
-    line = form.addLine("Voltage alerts")
+    panel = form.addExpansionPanel("Voltage alerts")
+    panel:open(false)
 
-    line = form.addLine("Active condition")
+    line = panel:addLine("Active condition")
     form.addSourceField(line, nil, function() return widget.alertActiveCondition end, function(value) widget.alertActiveCondition = value end)
 
-    line = form.addLine("Low cell voltage (v)")
+    line = panel:addLine("Low cell voltage (v)")
     field = form.addNumberField(line, nil, 0, 440, function() return widget.alertCellLow end, function(value) widget.alertCellLow = value end)
     field:suffix("v")
     field:default(345)
     field:decimals(2)
 
-    line = form.addLine("Critical cell voltage (v)")
+    line = panel:addLine("Critical cell voltage (v)")
     field = form.addNumberField(line, nil, 0, 440, function() return widget.alertCellCitical end, function(value) widget.alertCellCitical = value end)
     field:suffix("v")
     field:default(330)
     field:decimals(2)
+
+    line = panel:addLine("Sample duration (s)")
+    field = form.addNumberField(line, nil, 1, 20, function() return widget.alertSampleDuration / 100 end, function(value) widget.alertSampleDuration = value * 100 end)
+    field:suffix("s")
+    field:default(5)
+    field:decimals(1)
+
+    line = panel:addLine("Repeat interval (s)")
+    field = form.addNumberField(line, nil, 5, 10, function() return widget.alertRepeatInterval / 1000 end, function(value) widget.alertRepeatInterval = value * 1000 end)
+    field:suffix("s")
+    field:default(5)
 
     -- version
     line = form.addLine("Version")
@@ -404,6 +415,8 @@ local function read(widget)
     widget.alertCellLow = storage.read("alertCellLow")
     widget.alertCellCitical = storage.read("alertCellCitical")
     widget.alertActiveCondition = storage.read("alertActiveCondition")
+    widget.alertSampleDuration = storage.read("alertSampleDuration")
+    widget.alertRepeatInterval = storage.read("alertRepeatInterval")
 end
 
 
@@ -419,6 +432,8 @@ local function write(widget)
     storage.write("alertCellLow", widget.alertCellLow)
     storage.write("alertCellCitical", widget.alertCellCitical)
     storage.write("alertActiveCondition", widget.alertActiveCondition)
+    storage.write("alertSampleDuration", widget.alertSampleDuration)
+    storage.write("alertRepeatInterval", widget.alertRepeatInterval)
 end
 
 
