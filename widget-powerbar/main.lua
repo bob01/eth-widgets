@@ -69,6 +69,7 @@ local function create()
         -- audio state
         lastCapa = 100,
         nextCapa = 0,
+        haptic = false,
 
         --thresholds
         reserve = 20,
@@ -167,6 +168,13 @@ local function getSysTime()
 end
 
 
+local function playHaptic(widget)
+    if widget.haptic then
+        system.playHaptic(". .")
+    end
+end
+
+
 -- call fuel consumption on the 10's (singles when critical)
 local function crankFuelCalls(widget)
     -- silent if not linked or no fuel value
@@ -190,18 +198,23 @@ local function crankFuelCalls(widget)
         if widget.nextCapa ~= 0 then
             -- urgency?
             local locale = "en"
+            local haptic = false
             if capa > critical + widget.low then
                 system.playFile(widgetDir .. "sounds/" .. locale .. "/battry.wav")
             elseif capa > critical then
                 system.playFile(widgetDir .. "sounds/" .. locale .. "/batlow.wav")
             else
                 system.playFile(widgetDir .. "sounds/" .. locale .. "/batcrt.wav")
-                -- system.playHaptic(". .")
+                haptic = true
             end
 
-            -- -- play capa if >= 0
+            -- play capa if >= 0
             if capa > 0 then
                 system.playNumber(capa, UNIT_PERCENT, 0)
+            end
+
+            if haptic then
+                playHaptic(widget)
             end
         end
 
@@ -257,14 +270,20 @@ local function crankVoltageAlerts(widget)
         if now >= widget.alertPending then
             -- alert
             local locale = "en"
+            local haptic = false
             if alertLevel == ALERTLEVEL_LOW then
                 system.playFile(widgetDir .. "sounds/" .. locale .. "/batlow.wav")
             elseif alertLevel == ALERTLEVEL_CRITICAL then
                 system.playFile(widgetDir .. "sounds/" .. locale .. "/batcrt.wav")
+                haptic = true
             end
             -- report total voltage until https://github.com/FrSkyRC/ETHOS-Feedback-Community/issues/4708 addressed
             -- system.playNumber(cellv / prec, UNIT_VOLT, 2)
             system.playNumber(widget.volts, UNIT_VOLT, 1)
+
+            if haptic then
+                playHaptic(widget)
+            end
 
             -- start delay
             widget.alertNext = now + widget.alertRepeatInterval
@@ -367,6 +386,10 @@ local function configure(widget)
     line = form.addLine("Reduced voltage display")
     field = form.addBooleanField(line, nil, function() return widget.minimal end, function(newValue) widget.volts = nil widget.minimal = newValue end)
 
+    -- haptic
+    line = form.addLine("Vibrate on critical alerts")
+    field = form.addBooleanField(line, nil, function() return widget.haptic end, function(newValue) widget.haptic = newValue end)
+
     -- Alerts
     panel = form.addExpansionPanel("Voltage alerts")
     panel:open(false)
@@ -417,6 +440,7 @@ local function read(widget)
     widget.alertActiveCondition = storage.read("alertActiveCondition")
     widget.alertSampleDuration = storage.read("alertSampleDuration")
     widget.alertRepeatInterval = storage.read("alertRepeatInterval")
+    widget.haptic = storage.read("haptic")
 end
 
 
@@ -434,6 +458,7 @@ local function write(widget)
     storage.write("alertActiveCondition", widget.alertActiveCondition)
     storage.write("alertSampleDuration", widget.alertSampleDuration)
     storage.write("alertRepeatInterval", widget.alertRepeatInterval)
+    storage.write("haptic", widget.haptic)
 end
 
 
