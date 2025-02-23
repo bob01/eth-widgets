@@ -18,8 +18,8 @@
 #########################################################################
 ]]
 -- Author: Rob Gayle (bob00@rogers.com)
--- Date: 2024
-local version = "v0.9.6"
+-- Date: 2025
+local version = "v0.9.7"
 
 -- metadata
 local widgetDir = "/scripts/widget-powerbar/"
@@ -52,13 +52,14 @@ local function create()
 
         -- pack
         cellCount = 6,
+        capacity = 5000,
 
         -- state
         volts = nil,
         mah = nil,
         fuel = nil,
 
-        linked = false,
+        active = false,
         textColor = BLACK,
 
         -- pre-rendered text
@@ -84,6 +85,9 @@ local function create()
         alertLevel = ALERTLEVEL_NONE,
         alertNext = 0,
         alertRepeatInterval = 5000,
+
+        -- misc
+        capacityField = nil,
 
         -- methods
         getCritical = function (widget)
@@ -177,8 +181,8 @@ end
 
 -- call fuel consumption on the 10's (singles when critical)
 local function crankFuelCalls(widget)
-    -- silent if not linked or no fuel value
-    if not widget.linked or widget.fuel == nil then
+    -- silent if not active or no fuel value
+    if not widget.active or widget.fuel == nil then
         return
     end
 
@@ -237,8 +241,8 @@ local function crankVoltageAlerts(widget)
         return
     end
 
-    -- bail if not linked or no voltage value
-    if not widget.linked or widget.volts == nil then
+    -- bail if not active or no voltage value
+    if not widget.active or widget.volts == nil then
         return
     end
 
@@ -303,15 +307,15 @@ end
 -- process sensors, pre-render and announce
 local function wakeup(widget)
     -- telemetry active?
-    local linked = widget.voltageSensor and widget.voltageSensor:state()
-    if widget.linked ~= linked then
-        widget.linked = linked
-        widget.textColor = linked and BLACK or lcd.GREY(0x7F)
+    local active = widget.voltageSensor and widget.voltageSensor:state()
+    if widget.active ~= active then
+        widget.active = active
+        widget.textColor = active and BLACK or lcd.GREY(0x7F)
         lcd.invalidate()
     end
 
     -- voltage
-    local volts = widget.linked and widget.voltageSensor and widget.voltageSensor:value() or nil
+    local volts = widget.active and widget.voltageSensor and widget.voltageSensor:value() or nil
     if volts and widget.volts ~= volts then
         widget.volts = volts
         widget.textVolts = volts
@@ -321,7 +325,7 @@ local function wakeup(widget)
     end
 
     -- mah
-    local mah = widget.linked and widget.mahSensor and widget.mahSensor:value() or nil
+    local mah = widget.active and widget.mahSensor and widget.mahSensor:value() or nil
     if mah and widget.mah ~= mah then
         widget.mah = mah
         widget.textMah = mah and string.format("%.0f mah", mah) or nil
@@ -330,8 +334,15 @@ local function wakeup(widget)
 
     -- fuel
     local fuel = nil
-    if widget.linked and widget.fuelSensor then
-        fuel = widget.fuelSensor:value()
+    if widget.active then
+        if widget.fuelSensor then
+            -- use sensor
+            fuel = widget.fuelSensor:value()
+        elseif widget.mah and widget.capacity > 0 then
+            -- calculate using capacity
+            fuel = (widget.capacity - widget.mah) * 100 / widget.capacity
+        end
+
         if fuel then
             if fuel < widget.reserve then
                 fuel = fuel - widget.reserve
@@ -355,18 +366,44 @@ end
 -- config UI
 local function configure(widget)
     -- Sensor choices
-    line = form.addLine("Voltage (v) sensor")
+    local line = form.addLine("Voltage (v) sensor")
     form.addSourceField(line, nil, function() return widget.voltageSensor end, function(value) widget.voltageSensor = value end)
 
     line = form.addLine("Consumption (mAh) sensor")
     form.addSourceField(line, nil, function() return widget.mahSensor end, function(value) widget.mahSensor = value end)
 
+    widget.capacityField = nil
     line = form.addLine("Fuel (%) sensor")
-    form.addSourceField(line, nil, function() return widget.fuelSensor end, function(value) widget.fuelSensor = value end)
+    form.addSourceField(line, nil, 
+        function()
+            return widget.fuelSensor
+        end,
+        function(value)
+            widget.fuelSensor = value
+            if widget.capacityField ~= nil then
+                widget.capacityField:enable(widget.fuelSensor == nil or widget.fuelSensor:category() == CATEGORY_NONE)
+            end
+        end
+    )
+
+    -- LiPo capacity (used if fuel sensor n/a)
+    line = form.addLine("Lipo capacity (mAh)")
+    local field = form.addNumberField(line, nil, 50, 24000, function() return widget.capacity end, function(value) widget.capacity = value end)
+    field:suffix("mAh")
+    field:default(5000)
+    field:step(10)
+    field:enable(widget.fuelSensor == nil or widget.fuelSensor:category() == CATEGORY_NONE)
+    widget.capacityField = field
+
+    -- Cell count
+    line = form.addLine("Cell count")
+    field = form.addNumberField(line, nil, 2, 16, function() return widget.cellCount end, function(value) widget.cellCount = value end)
+    field:suffix("s")
+    field:default(6)
 
     -- Reserve
     line = form.addLine("LiPo reserve (%)")
-    local field = form.addNumberField(line, nil, 0, 40, function() return widget.reserve end, function(value) widget.reserve = value end)
+    field = form.addNumberField(line, nil, 0, 40, function() return widget.reserve end, function(value) widget.reserve = value end)
     field:suffix("%")
     field:default(20)
 
@@ -375,12 +412,6 @@ local function configure(widget)
     field = form.addNumberField(line, nil, 0, 30, function() return widget.low end, function(value) widget.low = value end)
     field:suffix("%")
     field:default(10)
-
-    -- Cell count
-    line = form.addLine("Cell count")
-    field = form.addNumberField(line, nil, 2, 16, function() return widget.cellCount end, function(value) widget.cellCount = value end)
-    field:suffix("s")
-    field:default(6)
 
     -- minimal display
     line = form.addLine("Reduced voltage display")
@@ -428,12 +459,14 @@ end
 
 -- load config
 local function read(widget)
+    local version = storage.read("version")
     widget.voltageSensor = storage.read("voltageSensor")
     widget.mahSensor = storage.read("mahSensor")
     widget.fuelSensor = storage.read("fuelSensor")
     widget.reserve = storage.read("reserve")
     widget.low = storage.read("low")
     widget.cellCount = storage.read("cellCount")
+    widget.capacity = storage.read("capacity")
     widget.minimal = storage.read("minimal")
     widget.alertCellLow = storage.read("alertCellLow")
     widget.alertCellCitical = storage.read("alertCellCitical")
@@ -446,12 +479,14 @@ end
 
 -- save config
 local function write(widget)
+    storage.write("version", 1)
     storage.write("voltageSensor", widget.voltageSensor)
     storage.write("mahSensor", widget.mahSensor)
     storage.write("fuelSensor", widget.fuelSensor)
     storage.write("reserve", widget.reserve)
     storage.write("low", widget.low)
     storage.write("cellCount", widget.cellCount)
+    storage.write("capacity", widget.capacity)
     storage.write("minimal", widget.minimal)
     storage.write("alertCellLow", widget.alertCellLow)
     storage.write("alertCellCitical", widget.alertCellCitical)
