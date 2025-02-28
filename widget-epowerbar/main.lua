@@ -19,12 +19,12 @@
 ]]
 -- Author: Rob Gayle (bob00@rogers.com)
 -- Date: 2025
-local version = "v0.9.7"
+local version = "v0.9.8"
 
 -- metadata
-local widgetDir = "/scripts/widget-powerbar/"
+local widgetDir = "/scripts/widget-epowerbar/"
 
-local translations = { en="Powerbar" }
+local translations = { en="ePowerbar" }
 
 local function name(widget)
     local locale = system.getLocale()
@@ -119,8 +119,8 @@ end
 local function paint(widget)
     -- canvas dimensions
     local w, h = lcd.getWindowSize()
-    local box_top, box_height = 2, h - 4
-    local box_left, box_width = 2, w - 4
+    local box_top, box_height = 0, h
+    local box_left, box_width = 0, w
 
     -- background
     lcd.color(lcd.RGB(200, 200, 200))
@@ -335,7 +335,7 @@ local function wakeup(widget)
     -- fuel
     local fuel = nil
     if widget.active then
-        if widget.fuelSensor then
+        if widget.fuelSensor and widget.fuelSensor:category() ~= CATEGORY_NONE then
             -- use sensor
             fuel = widget.fuelSensor:value()
         elseif widget.mah and widget.capacity > 0 then
@@ -407,12 +407,6 @@ local function configure(widget)
     field:suffix("%")
     field:default(20)
 
-    -- Low threshold
-    line = form.addLine("Low battery threshold (%)")
-    field = form.addNumberField(line, nil, 0, 30, function() return widget.low end, function(value) widget.low = value end)
-    field:suffix("%")
-    field:default(10)
-
     -- minimal display
     line = form.addLine("Reduced voltage display")
     field = form.addBooleanField(line, nil, function() return widget.minimal end, function(newValue) widget.volts = nil widget.minimal = newValue end)
@@ -427,6 +421,12 @@ local function configure(widget)
 
     line = panel:addLine("Active condition")
     form.addSourceField(line, nil, function() return widget.alertActiveCondition end, function(value) widget.alertActiveCondition = value end)
+
+    -- Low threshold
+    line = form.addLine("Lipo low (%)")
+    field = form.addNumberField(line, nil, 0, 30, function() return widget.low end, function(value) widget.low = value end)
+    field:suffix("%")
+    field:default(10)
 
     line = panel:addLine("Low cell voltage (v)")
     field = form.addNumberField(line, nil, 0, 440, function() return widget.alertCellLow end, function(value) widget.alertCellLow = value end)
