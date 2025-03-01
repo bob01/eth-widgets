@@ -160,7 +160,7 @@ local function paint(widget)
 
     -- fuel
     lcd.font(FONT_XXL)
-    _, text_h = lcd.getTextSize("")
+    local _, text_h = lcd.getTextSize("")
     lcd.drawText(box_left + box_width - 4, box_top + (box_height - text_h) + 2, widget.textFuel or "--- %", RIGHT)
 end
 
@@ -460,6 +460,7 @@ end
 -- load config
 local function read(widget)
     local version = storage.read("version")
+
     widget.voltageSensor = storage.read("voltageSensor")
     widget.mahSensor = storage.read("mahSensor")
     widget.fuelSensor = storage.read("fuelSensor")
@@ -480,6 +481,7 @@ end
 -- save config
 local function write(widget)
     storage.write("version", 1)
+
     storage.write("voltageSensor", widget.voltageSensor)
     storage.write("mahSensor", widget.mahSensor)
     storage.write("fuelSensor", widget.fuelSensor)
