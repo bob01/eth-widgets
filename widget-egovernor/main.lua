@@ -362,6 +362,7 @@ end
 local function create()
     local widget =
     {
+        -- sensors
         sensorArm = system.getSource("Arming Flags"),
         sensorArmDisabled = system.getSource("Arming Disable"),
         sensorGov = system.getSource("Governor"),
@@ -369,21 +370,20 @@ local function create()
         sensorEscSig = system.getSource("ESC1 Model ID"),
         sensorEscFlags = system.getSource("ESC1 Status"),
 
-        fmode = "",
-        throttle = "",
+        -- options
+        textColor = WHITE,
 
         -- state
-        thro = nil,
-
         active = false,
-        armed = false,
 
-        textColor = WHITE,
+        armed = false,
+        thro = nil,
+        throttle = "",
+        fmode = "",
+        sig = ESC_SIG_NONE,
 
         text_color = WHITE,
         escstatus_color = 0,
-    
-        sig = ESC_SIG_NONE,
     }
 
     return widget
@@ -408,11 +408,13 @@ local function paint(widget)
         text = escstatus_text
         color = widget.escstatus_color
     end
+    -- text = "Scorpion ESC OK"
+    -- color = WHITE
     if text then
         lcd.font(FONT_L)
         lcd.color(color)
         local _, text_h = lcd.getTextSize("")
-        lcd.drawText(box_left + margin, box_top + (box_height - text_h), text)
+        lcd.drawText(box_left + margin, box_top + (box_height - text_h) - margin / 2, text)
     end
 
     -- fmode / gov mode
