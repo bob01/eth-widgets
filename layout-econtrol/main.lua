@@ -41,7 +41,7 @@ local function init()
     local y = sy
     local cwb = cwl / 4
     local cw = cwb
-    widgets[#widgets + 1] = { x = x,        y = y,          w = cwb - sp,        h = ch - sp }
+    widgets[#widgets + 1] = { x = x,        y = y,          w = cwb - sp,       h = ch - sp }
 
     x = x + cw
     widgets[#widgets + 1] = { x = x,        y = y,          w = cw - sp,        h = ch - sp }
@@ -55,7 +55,7 @@ local function init()
     -- row 2
     x = sx
     y = y + ch
-    widgets[#widgets + 1] = { x = x,        y = y,          w = cwl - sp,        h = ch - sp }
+    widgets[#widgets + 1] = { x = x,        y = y,          w = cwl - sp,       h = ch - sp }
 
     -- row 3
     x = sx
@@ -71,18 +71,18 @@ local function init()
     x = sx
     y = y + ch
     cw = cwl
-    widgets[#widgets + 1] = { x = x,        y = y,          w = cw - sp,         h = ch - sp }
+    widgets[#widgets + 1] = { x = x,        y = y,          w = cw - sp,        h = ch - sp }
 
     x = x + cw
     cw = sw - cwl
-    widgets[#widgets + 1] = { x = x,        y = y,          w = cw,        h = ch - sp }
+    widgets[#widgets + 1] = { x = x,        y = y,          w = cw,             h = ch - sp }
 
     -- image
     y = sy
-    widgets[#widgets + 1] = { x = cwl, y = y,          w = sw - cwl,   h = ch * 3 - sp }
+    widgets[#widgets + 1] = { x = cwl,      y = y,          w = sw - cwl,       h = ch * 3 - sp }
 
     -- register
-    system.registerLayout({ key = "rngecon0", widgets = widgets })
+    system.registerLayout({ key = "rngelay0", widgets = widgets })
   end
 
   return { init = init }
