@@ -411,14 +411,14 @@ local function paint(widget)
     -- text = "Scorpion ESC OK"
     -- color = WHITE
     if text then
-        lcd.font(FONT_L)
+        lcd.font(FONT_STD)
         lcd.color(color)
         local _, text_h = lcd.getTextSize("")
         lcd.drawText(box_left + margin, box_top + (box_height - text_h) - margin / 2, text)
     end
 
     -- fmode / gov mode
-    lcd.font(FONT_S)
+    lcd.font(FONT_STD)
     lcd.color(COLOR_INFO_GREY)
     local _, text_h = lcd.getTextSize("")
     lcd.drawText(box_left + box_width - margin, box_top + 2, widget.fmode, RIGHT)

@@ -55,6 +55,8 @@ local function create()
         bmpNone = lcd.loadBitmap(widgetDir .. "bitmaps/heli_bitmap.png"),
         modelId = nil,
         bmp = nil,
+
+        craftName = nil,
     }
 
     return widget
@@ -83,12 +85,12 @@ local function paint(widget)
     end
 
     -- title
-    lcd.color(widget.modelId and widget.textColor or COLOR_DISABLED)
-    lcd.drawText(box_left + margin * 2, box_top + margin, widget.modelId or "---")
+    lcd.color(widget.active and widget.textColor or COLOR_DISABLED)
+    lcd.drawText(box_left + margin * 2, box_top + margin, widget.craftName or "---")
 end
 
 
--- process sensors, pre-render and announce
+-- process sensors, pre-render
 local function wakeup(widget)
     -- telemetry active?
     local active = widget.sensorModelId and widget.sensorModelId:state()
@@ -97,6 +99,15 @@ local function wakeup(widget)
         lcd.invalidate()
     end
 
+    -- craft name (use model name until name from FBL available)
+    local craftName = model.name()
+    -- print(craftName)
+    if widget.craftName ~= craftName then
+        widget.craftName = craftName
+        lcd.invalidate()
+    end
+
+    -- bitmap
     if widget.bitmapLast ~= widget.bitmap then
         widget.bitmapLast = widget.bitmap
         lcd.invalidate()
@@ -120,7 +131,9 @@ local function wakeup(widget)
             -- bitmap not explicitly specified, use modelId
             if modelId then
                 -- derive from model ID
-                widget.bmp = lcd.loadBitmap(bmpDir .. "easy2.bmp")
+                local bitmapFile = string.format("%sheli-%.0f", bmpDir, modelId)
+                -- print(bitmapFile)
+                widget.bmp = lcd.loadBitmap(bitmapFile .. ".bmp") or lcd.loadBitmap(bitmapFile .. ".png")
             else
                 -- none available
                 widget.bmp = nil
