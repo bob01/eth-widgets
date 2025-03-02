@@ -19,7 +19,7 @@
 ]]
 -- Author: Rob Gayle (bob00@rogers.com)
 -- Date: 2025
-local version = "v0.9.8"
+local version = "v0.9.8.2"
 
 -- metadata
 local widgetDir = "/scripts/widget-epowerbar/"
@@ -43,9 +43,10 @@ local function create()
     local widget =
     {
         -- sensors
-        voltageSensor = nil,
-        mahSensor = nil,
-        fuelSensor = nil,
+        voltageSensor = system.getSource("Voltage"),
+        cellsSensor = system.getSource("Cell Count"),
+        mahSensor = system.getSource("Consumption"),
+        fuelSensor = system.getSource("Charge Level"),
 
         -- display
         minimal = false,
@@ -58,6 +59,7 @@ local function create()
         volts = nil,
         mah = nil,
         fuel = nil,
+        cells = nil,
 
         active = false,
         textColor = BLACK,
@@ -70,7 +72,7 @@ local function create()
         -- audio state
         lastCapa = 100,
         nextCapa = 0,
-        haptic = false,
+        haptic = true,
 
         --thresholds
         reserve = 20,
@@ -87,6 +89,7 @@ local function create()
         alertRepeatInterval = 5000,
 
         -- misc
+        cellsField = nil,
         capacityField = nil,
 
         -- methods
@@ -254,7 +257,7 @@ local function crankVoltageAlerts(widget)
 
     -- we will be working w/ per cell voltage (x100 for 2 place decimal prec)
     local prec = 100
-    local cellv = widget.volts / widget.cellCount
+    local cellv = widget.volts / widget.cells
     cellv = math.floor(cellv * prec)
 
     local alertLevel = (cellv <= widget.alertCellCitical and ALERTLEVEL_CRITICAL) or (cellv <= widget.alertCellLow and ALERTLEVEL_LOW) or ALERTLEVEL_NONE
@@ -314,15 +317,30 @@ local function wakeup(widget)
         lcd.invalidate()
     end
 
+    -- cells
+    local cells = nil
+    if widget.cellsSensor and widget.cellsSensor:category() ~= CATEGORY_NONE then
+        -- use sensor cell count
+    else
+        -- use configured cell count
+        cells = widget.cellCount
+    end
+    if cells and widget.cells ~= cells then
+        widget.cells = cells
+        lcd.invalidate()
+        -- force volts / textVolts recalc
+        widget.volts = nil
+    end
+
     -- voltage
-    local volts = widget.active and widget.voltageSensor and widget.voltageSensor:value() or nil
+    local volts = widget.active and widget.cells and widget.voltageSensor and widget.voltageSensor:value() or nil
     if volts and widget.volts ~= volts then
         widget.volts = volts
-        widget.textVolts = volts
-            and (widget.minimal and string.format("%.2fv", volts / widget.cellCount) or string.format("%.1fv / %.2fv", volts, volts / widget.cellCount))
-            or nil
+        widget.textVolts = (widget.minimal and string.format("%.2fv", volts / widget.cells) or string.format("%.1fv / %.2fv (%.0fs)", volts, volts / widget.cells, widget.cells)) or nil
         lcd.invalidate()
     end
+    
+    -- print("v=" .. (volts or 'nil') .. ", cc=" .. (cells or 'nil'))
 
     -- mah
     local mah = widget.active and widget.mahSensor and widget.mahSensor:value() or nil
@@ -374,7 +392,7 @@ local function configure(widget)
 
     widget.capacityField = nil
     line = form.addLine("Fuel (%) sensor")
-    form.addSourceField(line, nil, 
+    form.addSourceField(line, nil,
         function()
             return widget.fuelSensor
         end,
@@ -395,17 +413,39 @@ local function configure(widget)
     field:enable(widget.fuelSensor == nil or widget.fuelSensor:category() == CATEGORY_NONE)
     widget.capacityField = field
 
+    widget.cellsField = nil
+    line = form.addLine("Cell count sensor")
+    form.addSourceField(line, nil,
+        function()
+            return widget.cellsSensor
+        end,
+        function(value)
+            widget.cellsSensor = value
+            if widget.cellsField ~= nil then
+                widget.cellsField:enable(widget.cellsSensor == nil or widget.cellsSensor:category() == CATEGORY_NONE)
+            end
+        end
+    )
+
     -- Cell count
     line = form.addLine("Cell count")
     field = form.addNumberField(line, nil, 2, 16, function() return widget.cellCount end, function(value) widget.cellCount = value end)
     field:suffix("s")
     field:default(6)
+    field:enable(widget.cellsSensor == nil or widget.cellsSensor:category() == CATEGORY_NONE)
+    widget.cellsField = field
 
     -- Reserve
-    line = form.addLine("LiPo reserve (%)")
+    line = form.addLine("LiPo reserve capacity (%)")
     field = form.addNumberField(line, nil, 0, 40, function() return widget.reserve end, function(value) widget.reserve = value end)
     field:suffix("%")
     field:default(20)
+
+    -- Low threshold
+    line = form.addLine("Lipo low alert (%)")
+    field = form.addNumberField(line, nil, 0, 30, function() return widget.low end, function(value) widget.low = value end)
+    field:suffix("%")
+    field:default(10)
 
     -- minimal display
     line = form.addLine("Reduced voltage display")
@@ -421,12 +461,6 @@ local function configure(widget)
 
     line = panel:addLine("Active condition")
     form.addSourceField(line, nil, function() return widget.alertActiveCondition end, function(value) widget.alertActiveCondition = value end)
-
-    -- Low threshold
-    line = form.addLine("Lipo low (%)")
-    field = form.addNumberField(line, nil, 0, 30, function() return widget.low end, function(value) widget.low = value end)
-    field:suffix("%")
-    field:default(10)
 
     line = panel:addLine("Low cell voltage (v)")
     field = form.addNumberField(line, nil, 0, 440, function() return widget.alertCellLow end, function(value) widget.alertCellLow = value end)
@@ -464,6 +498,7 @@ local function read(widget)
     widget.voltageSensor = storage.read("voltageSensor")
     widget.mahSensor = storage.read("mahSensor")
     widget.fuelSensor = storage.read("fuelSensor")
+    widget.cellsSensor = storage.read("cellsSensor")
     widget.reserve = storage.read("reserve")
     widget.low = storage.read("low")
     widget.cellCount = storage.read("cellCount")
@@ -485,6 +520,7 @@ local function write(widget)
     storage.write("voltageSensor", widget.voltageSensor)
     storage.write("mahSensor", widget.mahSensor)
     storage.write("fuelSensor", widget.fuelSensor)
+    storage.write("cellsSensor", widget.cellsSensor)
     storage.write("reserve", widget.reserve)
     storage.write("low", widget.low)
     storage.write("cellCount", widget.cellCount)
@@ -501,7 +537,7 @@ end
 
 -- initialize / register widget
 local function init()
-    system.registerWidget({ key = "rngpbar", name = name, create = create, paint = paint, wakeup = wakeup, configure = configure, read = read, write = write })
+    system.registerWidget({ key = "rngbar0", name = name, create = create, paint = paint, wakeup = wakeup, configure = configure, read = read, write = write })
 end
 
 return { init = init }

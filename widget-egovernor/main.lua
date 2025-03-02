@@ -637,6 +637,9 @@ local function configure(widget)
     line = form.addLine("Text color")
     form.addColorField(line, nil, function() return widget.textColor end, function(value) widget.textColor = value end)
 
+    -- version
+    line = form.addLine("Version")
+    form.addStaticText(line, nil, version)
 end
 
 
