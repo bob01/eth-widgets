@@ -18,6 +18,7 @@
 #########################################################################
 ]]
 -- Author: Rob Gayle (bob00@rogers.com)
+-- Thanks to Rob Thomson for the rfSuite interop
 -- Date: 2025
 local version = "v0.2.0"
 
@@ -41,22 +42,19 @@ local COLOR_DISABLED = lcd.GREY(0x7F)
 local function create()
     local widget =
     {
-        -- sensors
-        sensorModelId = system.getSource("Model ID"),
-
         -- options
-        bitmap = nil,
-        bitmapLast = nil,
+        useFblParams = rfsuite and rfsuite.session ~= nil,
         textColor = WHITE,
 
-        -- state
-        active = false,
-
+        -- constant
         bmpNone = lcd.loadBitmap(widgetDir .. "bitmaps/heli_bitmap.png"),
-        modelId = nil,
-        bmp = nil,
 
+        -- state
+        modelName = nil,
         craftName = nil,
+        bitmap = nil,
+        bmp = nil,
+        craftBmp = nil,
     }
 
     return widget
@@ -76,7 +74,7 @@ local function paint(widget)
     local _, text_h = lcd.getTextSize("")
 
     -- bitmap
-    local bmp = widget.bmp or  widget.bmpNone
+    local bmp = widget.craftBmp or widget.bmp or  widget.bmpNone
     if bmp then
         local bw = bmp:width()
         local bh = bmp:height()
@@ -85,69 +83,57 @@ local function paint(widget)
     end
 
     -- title
-    lcd.color(widget.active and widget.textColor or COLOR_DISABLED)
-    lcd.drawText(box_left + margin * 2, box_top + margin, widget.craftName or "---")
+    lcd.color(widget.textColor)
+    lcd.drawText(box_left + margin * 2, box_top + margin, widget.craftName or widget.modelName or "---")
 end
 
 
 -- process sensors, pre-render
 local function wakeup(widget)
-    -- telemetry active?
-    local active = widget.sensorModelId and widget.sensorModelId:state()
-    if widget.active ~= active then
-        widget.active = active
+    -- model name
+    if widget.modelName ~= model.name() then
+        widget.modelName = model.name()
         lcd.invalidate()
     end
 
-    -- craft name (use model name until name from FBL available)
-    local craftName = model.name()
-    -- print(craftName)
-    if widget.craftName ~= craftName then
-        widget.craftName = craftName
-        lcd.invalidate()
+    -- craft name
+    if widget.useFblParams then
+        -- use rfsuite
+        local craftName = rfsuite.session.craftName
+        if craftName and widget.craftName ~= craftName then
+            widget.craftName = craftName
+            lcd.invalidate()
+
+            -- load craft bitmap
+            local bmpFile = bmpDir .. craftName
+            local bmp = (os.stat(bmpFile .. ".png") and lcd.loadBitmap(bmpFile .. ".png")) or
+                        (os.stat(bmpFile .. ".bmp") and lcd.loadBitmap(bmpFile .. ".bmp")) or nil
+            widget.craftBmp = bmp
+        end
+    elseif widget.craftName or widget.craftBmp then
+        -- don't use, dump
+        widget.craftName = nil
+        widget.craftBmp = nil
     end
 
     -- bitmap
-    if widget.bitmapLast ~= widget.bitmap then
-        widget.bitmapLast = widget.bitmap
+    local bitmap = model.bitmap()
+    if widget.bitmap ~= bitmap then
+        widget.bitmap = bitmap
         lcd.invalidate()
 
         -- use new bitmap (or not)
-        widget.bmp = widget.bitmap and lcd.loadBitmap(bmpDir .. widget.bitmap) or nil
-
-        -- force model ID recalc
-        if widget.bitmap == nil then
-            widget.modelId = nil
-        end
-    end
-
-    -- model ID
-    local modelId = widget.sensorModelId and widget.sensorModelId:value()
-    if widget.modelId ~= modelId then
-        widget.modelId = modelId
-        lcd.invalidate()
-
-        if widget.bitmap == nil then
-            -- bitmap not explicitly specified, use modelId
-            if modelId then
-                -- derive from model ID
-                local bitmapFile = string.format("%sheli-%.0f", bmpDir, modelId)
-                -- print(bitmapFile)
-                widget.bmp = lcd.loadBitmap(bitmapFile .. ".bmp") or lcd.loadBitmap(bitmapFile .. ".png")
-            else
-                -- none available
-                widget.bmp = nil
-            end
-        end
+        widget.bmp = bitmap and #bitmap > 0 and lcd.loadBitmap(widget.bitmap) or nil
     end
 end
 
 
 -- config UI
 local function configure(widget)
-    -- Sensor choices
-    local line = form.addLine("Picture")
-    form.addBitmapField(line, nil, bmpDir, function() return widget.bitmap end, function(newValue) widget.bitmap = #newValue > 0 and newValue or nil end)
+    local craftNameAvailable = rfsuite and rfsuite.session ~= nil
+    local line = form.addLine("Use RotorFlight name / image")
+    local field = form.addBooleanField(line, nil, function() return craftNameAvailable and widget.useFblParams end, function(value) widget.useFblParams = value end)
+    field:enable(craftNameAvailable)
 
     line = form.addLine("Text color")
     form.addColorField(line, nil, function() return widget.textColor end, function(value) widget.textColor = value end)
@@ -159,7 +145,7 @@ end
 local function read(widget)
     local version = storage.read("version")
 
-    widget.picture = storage.read("bitmap")
+    widget.useFblParams = storage.read("useFblParams")
     widget.textColor = storage.read("textColor")
 end
 
@@ -168,7 +154,7 @@ end
 local function write(widget)
     storage.write("version", 1)
 
-    storage.write("bitmap", widget.bitmap)
+    storage.write("useFblParams", widget.useFblParams)
     storage.write("textColor", widget.textColor)
 end
 
