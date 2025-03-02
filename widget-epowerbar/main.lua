@@ -321,6 +321,7 @@ local function wakeup(widget)
     local cells = nil
     if widget.cellsSensor and widget.cellsSensor:category() ~= CATEGORY_NONE then
         -- use sensor cell count
+        cells = widget.cellsSensor:value()
     else
         -- use configured cell count
         cells = widget.cellCount
