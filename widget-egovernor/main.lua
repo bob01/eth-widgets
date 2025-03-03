@@ -364,8 +364,8 @@ local function create()
     {
         -- sensors
         sensorArm = system.getSource("Arming Flags"),
-        sensorArmDisabled = system.getSource("Arming Disable"),
-        sensorGov = system.getSource("Governor"),
+        sensorArmDisabled = system.getSource("Arming Disable") or system.getSource("Arming Disable ") or system.getSource("Arming Disable Flags"), -- ethos name too long, truncated name included until corrected
+        sensorGov = system.getSource("Governor") or system.getSource("Governor State"),
         sensorThr = system.getSource("Throttle %"),
         sensorEscSig = system.getSource("ESC1 Model ID"),
         sensorEscFlags = system.getSource("ESC1 Status"),
@@ -482,6 +482,8 @@ local function wakeup(widget)
         lcd.invalidate()
     end
 
+    -- print("####" .. widget.sensorArmDisabled:name() .. "####")
+
     if widget.active then
         -- TODO connected stuff ####
 
@@ -548,8 +550,8 @@ local function wakeup(widget)
         end
 
         -- ESC sig
-        local escSig = widget.sensorEscSig and widget.sensorEscSig:value()
-        local escFlags = widget.sensorEscFlags and widget.sensorEscFlags:value()
+        local escSig = widget.sensorEscSig and widget.sensorEscSig:category() == CATEGORY_TELEMETRY_SENSOR and widget.sensorEscSig:value()
+        local escFlags = widget.sensorEscFlags and widget.sensorEscFlags:category() == CATEGORY_TELEMETRY_SENSOR and widget.sensorEscFlags:value()
         if escSig and escFlags then
             widget.sig = escSig
             if not escGetStatus then
