@@ -19,7 +19,7 @@
 ]]
 -- Author: Rob Gayle (bob00@rogers.com)
 -- Date: 2025
-local version = "v0.2.2"
+local version = "v0.2.4"
 
 -- metadata
 local widgetDir = "/scripts/widget-egovernor/"
@@ -34,8 +34,8 @@ end
 --------------------------------------------------------------
 -- constants
 
-local COLOR_DISABLED = lcd.GREY(0x7F)
-local COLOR_INFO_GREY = lcd.GREY(0xBF)
+local colorDisabled = lcd.GREY(0x7F)
+local colorInfoGrey = lcd.GREY(0xBF)
 
 local LEVEL_TRACE       = 0
 local LEVEL_INFO        = 1
@@ -43,8 +43,8 @@ local LEVEL_WARN        = 2
 local LEVEL_ERROR       = 3
 
 local escStatusColors = {
-    [LEVEL_TRACE] = COLOR_DISABLED,
-    [LEVEL_INFO]  = COLOR_INFO_GREY,
+    [LEVEL_TRACE] = colorDisabled,
+    [LEVEL_INFO]  = colorInfoGrey,
     [LEVEL_WARN]  = YELLOW,
     [LEVEL_ERROR] = RED,
 }
@@ -360,6 +360,7 @@ end
 
 -- ctor
 local function create()
+    local colorDefaultTheme = lcd.themeColor(THEME_DEFAULT_COLOR)
     local widget =
     {
         -- sensors
@@ -371,7 +372,7 @@ local function create()
         sensorEscFlags = system.getSource("ESC1 Status"),
 
         -- options
-        textColor = WHITE,
+        textColor = colorDefaultTheme,
 
         -- state
         active = false,
@@ -382,7 +383,7 @@ local function create()
         fmode = "",
         sig = ESC_SIG_NONE,
 
-        text_color = WHITE,
+        text_color = colorDefaultTheme,
         escstatus_color = 0,
     }
 
@@ -419,7 +420,7 @@ local function paint(widget)
 
     -- fmode / gov mode
     lcd.font(FONT_STD)
-    lcd.color(COLOR_INFO_GREY)
+    lcd.color(colorInfoGrey)
     local _, text_h = lcd.getTextSize("")
     lcd.drawText(box_left + box_width - margin, box_top + 2, widget.fmode, RIGHT)
 
@@ -609,7 +610,7 @@ local function wakeup(widget)
         widget.armed = false
 
         -- colors
-        widget.text_color =  COLOR_DISABLED
+        widget.text_color =  colorDisabled
     end
 
 end

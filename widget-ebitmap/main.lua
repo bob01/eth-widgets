@@ -20,7 +20,7 @@
 -- Author: Rob Gayle (bob00@rogers.com)
 -- Thanks to Rob Thomson for the rfSuite interop
 -- Date: 2025
-local version = "v0.2.0"
+local version = "v0.2.4"
 
 -- metadata
 local widgetDir = "/scripts/widget-ebitmap/"
@@ -38,13 +38,24 @@ end
 
 local COLOR_DISABLED = lcd.GREY(0x7F)
 
+local textAlignment = {
+    { "Left", TEXT_LEFT },
+    { "Centered", TEXT_CENTERED },
+    { "Right", TEXT_RIGHT },
+}
+
+
+--------------------------------------------------------------
+-- code
+
 -- ctor
 local function create()
     local widget =
     {
         -- options
         useFblParams = rfsuite and rfsuite.session ~= nil,
-        textColor = WHITE,
+        textColor = lcd.themeColor(THEME_DEFAULT_COLOR),
+        textAlignment = TEXT_CENTERED,
 
         -- constant
         bmpNone = lcd.loadBitmap(widgetDir .. "bitmaps/heli_bitmap.png"),
@@ -83,8 +94,16 @@ local function paint(widget)
     end
 
     -- title
+    local tx
+    if widget.textAlignment == TEXT_LEFT then
+        tx = box_left + margin * 2
+    elseif widget.textAlignment == TEXT_CENTERED then
+        tx = box_left + box_width / 2
+    else
+        tx = box_left + box_width - margin * 2
+    end
     lcd.color(widget.textColor)
-    lcd.drawText(box_left + margin * 2, box_top + margin, widget.craftName or widget.modelName or "---")
+    lcd.drawText(tx, box_top + margin, widget.craftName or widget.modelName or "---", widget.textAlignment)
 end
 
 
@@ -138,6 +157,9 @@ local function configure(widget)
     line = form.addLine("Text color")
     form.addColorField(line, nil, function() return widget.textColor end, function(value) widget.textColor = value end)
 
+    line = form.addLine("Text alignment")
+    form.addChoiceField(line, nil, textAlignment, function() return widget.textAlignment end, function(value) widget.textAlignment = value end)
+
     -- version
     line = form.addLine("Version")
     form.addStaticText(line, nil, version)
@@ -151,6 +173,7 @@ local function read(widget)
 
     widget.useFblParams = storage.read("useFblParams")
     widget.textColor = storage.read("textColor")
+    widget.textAlignment = storage.read("textAlignment")
 end
 
 
@@ -160,6 +183,7 @@ local function write(widget)
 
     storage.write("useFblParams", widget.useFblParams)
     storage.write("textColor", widget.textColor)
+    storage.write("textAlignment", widget.textAlignment)
 end
 
 

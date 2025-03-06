@@ -18,8 +18,8 @@
 #########################################################################
 ]]
 -- Author: Rob Gayle (bob00@rogers.com)
--- Date: 2025
-local version = "v0.9.8.2"
+-- Date: 2024, 2025
+local version = "v0.9.8.5"
 
 -- metadata
 local widgetDir = "/scripts/widget-epowerbar/"
@@ -43,10 +43,10 @@ local function create()
     local widget =
     {
         -- sensors
-        voltageSensor = system.getSource("Voltage"),
+        voltageSensor = system.getSource("Voltage") or system.getSource("VFAS"),
         cellsSensor = system.getSource("Cell Count"),
-        mahSensor = system.getSource("Consumption"),
-        fuelSensor = system.getSource("Charge Level"),
+        mahSensor = system.getSource("Consumption") or system.getSource("Capa") or system.getSource("mAh"),
+        fuelSensor = system.getSource("Charge Level") or system.getSource("Fuel"),
 
         -- display
         minimal = false,
@@ -334,7 +334,7 @@ local function wakeup(widget)
     end
 
     -- voltage
-    local volts = widget.active and widget.cells and widget.voltageSensor and widget.voltageSensor:value() or nil
+    local volts = widget.active and widget.cells and widget.cells > 0 and widget.voltageSensor and widget.voltageSensor:value() or nil
     if volts and widget.volts ~= volts then
         widget.volts = volts
         widget.textVolts = (widget.minimal and string.format("%.2fv", volts / widget.cells) or string.format("%.1fv / %.2fv (%.0fs)", volts, volts / widget.cells, widget.cells)) or nil
