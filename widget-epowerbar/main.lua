@@ -72,6 +72,7 @@ local function create()
         -- audio state
         lastCapa = 100,
         nextCapa = 0,
+        mute = false,
         haptic = true,
 
         --thresholds
@@ -377,8 +378,10 @@ local function wakeup(widget)
         lcd.invalidate()
     end
 
-    crankFuelCalls(widget)
-    crankVoltageAlerts(widget)
+    if not widget.mute then
+        crankFuelCalls(widget)
+        crankVoltageAlerts(widget)
+    end
 end
 
 
@@ -448,13 +451,17 @@ local function configure(widget)
     field:suffix("%")
     field:default(10)
 
-    -- minimal display
-    line = form.addLine("Reduced voltage display")
-    field = form.addBooleanField(line, nil, function() return widget.minimal end, function(newValue) widget.volts = nil widget.minimal = newValue end)
+    -- mute
+    line = form.addLine("Mute (voice and vibration)")
+    field = form.addBooleanField(line, nil, function() return widget.mute end, function(newValue) widget.mute = newValue end)
 
     -- haptic
     line = form.addLine("Vibrate on critical alerts")
     field = form.addBooleanField(line, nil, function() return widget.haptic end, function(newValue) widget.haptic = newValue end)
+
+    -- minimal display
+    line = form.addLine("Minimal display")
+    field = form.addBooleanField(line, nil, function() return widget.minimal end, function(newValue) widget.volts = nil widget.minimal = newValue end)
 
     -- Alerts
     panel = form.addExpansionPanel("Voltage alerts")
@@ -511,6 +518,7 @@ local function read(widget)
     widget.alertSampleDuration = storage.read("alertSampleDuration")
     widget.alertRepeatInterval = storage.read("alertRepeatInterval")
     widget.haptic = storage.read("haptic")
+    widget.mute = storage.read("mute")
 end
 
 
@@ -533,6 +541,7 @@ local function write(widget)
     storage.write("alertSampleDuration", widget.alertSampleDuration)
     storage.write("alertRepeatInterval", widget.alertRepeatInterval)
     storage.write("haptic", widget.haptic)
+    storage.write("mute", widget.mute)
 end
 
 
