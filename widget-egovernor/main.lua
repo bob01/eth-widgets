@@ -364,12 +364,12 @@ local function create()
     local widget =
     {
         -- sensors
-        sensorArm = system.getSource("Arming Flags") or system.getSource("Arm Flags"),
-        sensorArmDisabled = system.getSource("Arming Disable") or system.getSource("Arming Disable ") or system.getSource("Arming Disable Flags") or system.getSource("Arm Dis Flags"),
-        sensorGov = system.getSource("Governor") or system.getSource("Governor State") or system.getSource("Gov State"),
-        sensorThr = system.getSource("Throttle %"),
-        sensorEscSig = system.getSource("ESC1 Model ID"),
-        sensorEscFlags = system.getSource("ESC1 Status"),
+        sensorArm = system.getSource("Arming Flags")            or system.getSource({ category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5122 }),
+        sensorArmDisabled = system.getSource("Arming Disable")  or system.getSource({ category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5123 }),
+        sensorGov = system.getSource("Governor")                or system.getSource({ category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5125 }),
+        sensorThr = system.getSource("Throttle %")              or system.getSource({ category = CATEGORY_TELEMETRY_SENSOR, appId = 0x51A4 }),
+        sensorEscSig = system.getSource("ESC1 Model ID")        or system.getSource({ category = CATEGORY_TELEMETRY_SENSOR, appId = 0x512B }),
+        sensorEscFlags = system.getSource("ESC1 Status")        or system.getSource({ category = CATEGORY_TELEMETRY_SENSOR, appId = 0x512A }),
 
         -- options
         textColor = colorDefaultTheme,

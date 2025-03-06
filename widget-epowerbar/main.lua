@@ -43,10 +43,10 @@ local function create()
     local widget =
     {
         -- sensors
-        voltageSensor = system.getSource("Voltage") or system.getSource("VFAS"),
-        cellsSensor = system.getSource("Cell Count"),
-        mahSensor = system.getSource("Consumption") or system.getSource("Capa") or system.getSource("mAh"),
-        fuelSensor = system.getSource("Charge Level") or system.getSource("Fuel"),
+        voltageSensor = system.getSource("Voltage")     or system.getSource({ category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0210 }) or system.getSource("VFAS"),
+        cellsSensor = system.getSource("Cell Count")    or system.getSource({ category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5260 }),
+        mahSensor = system.getSource("Consumption")     or system.getSource({ category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5250 }) or system.getSource("Capa") or system.getSource("mAh"),
+        fuelSensor = system.getSource("Charge Level")   or system.getSource({ category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0600 }) or system.getSource("Fuel"),
 
         -- display
         minimal = false,
