@@ -19,7 +19,7 @@
 ]]
 -- Author: Rob Gayle (bob00@rogers.com)
 -- Date: 2025
-local version = "v0.2.4"
+local version = "v0.2.5"
 
 -- metadata
 local widgetDir = "/scripts/widget-egovernor/"
