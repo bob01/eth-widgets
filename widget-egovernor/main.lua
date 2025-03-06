@@ -364,9 +364,9 @@ local function create()
     local widget =
     {
         -- sensors
-        sensorArm = system.getSource("Arming Flags"),
-        sensorArmDisabled = system.getSource("Arming Disable") or system.getSource("Arming Disable ") or system.getSource("Arming Disable Flags"), -- ethos name too long, truncated name included until corrected
-        sensorGov = system.getSource("Governor") or system.getSource("Governor State"),
+        sensorArm = system.getSource("Arming Flags") or system.getSource("Arm Flags"),
+        sensorArmDisabled = system.getSource("Arming Disable") or system.getSource("Arming Disable ") or system.getSource("Arming Disable Flags") or system.getSource("Arm Dis Flags"),
+        sensorGov = system.getSource("Governor") or system.getSource("Governor State") or system.getSource("Gov State"),
         sensorThr = system.getSource("Throttle %"),
         sensorEscSig = system.getSource("ESC1 Model ID"),
         sensorEscFlags = system.getSource("ESC1 Status"),
