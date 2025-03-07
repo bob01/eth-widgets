@@ -19,7 +19,7 @@
 ]]
 -- Author: Rob Gayle (bob00@rogers.com)
 -- Date: 2025
-local version = "v0.2.5"
+local version = "v0.2.6"
 
 -- metadata
 local widgetDir = "/scripts/widget-egovernor/"
@@ -371,9 +371,6 @@ local function create()
         sensorEscSig = system.getSource("ESC1 Model ID")        or system.getSource({ category = CATEGORY_TELEMETRY_SENSOR, appId = 0x512B }),
         sensorEscFlags = system.getSource("ESC1 Status")        or system.getSource({ category = CATEGORY_TELEMETRY_SENSOR, appId = 0x512A }),
 
-        -- options
-        textColor = colorDefaultTheme,
-
         -- state
         active = false,
 
@@ -399,6 +396,15 @@ local function paint(widget)
     local box_left, box_width = 0, w
     local margin = 8
 
+    -- colors
+    local colorGrey = lcd.darkMode() and lcd.GREY(0xBF) or lcd.GREY(0x3F)
+
+    -- title
+    lcd.font(FONT_S)
+    lcd.color(colorGrey)
+    local _, text_h = lcd.getTextSize("")
+    lcd.drawText(box_left + margin, box_top + margin / 2, "Governor")
+
     -- ESC status
     local text
     local color
@@ -420,8 +426,8 @@ local function paint(widget)
 
     -- fmode / gov mode
     lcd.font(FONT_STD)
-    lcd.color(colorInfoGrey)
-    local _, text_h = lcd.getTextSize("")
+    lcd.color(colorGrey)
+    _, text_h = lcd.getTextSize("")
     lcd.drawText(box_left + box_width - margin, box_top + 2, widget.fmode, RIGHT)
 
     -- throttle / safe
@@ -577,7 +583,7 @@ local function wakeup(widget)
         end
 
         -- ESC flags
-        if escGetStatus then
+        if escGetStatus and escFlags then
             local changed = logPutEv(widget, escFlags)
             local status = escGetStatus(escFlags, changed)
             if status.level >= escstatus_level then
@@ -600,7 +606,7 @@ local function wakeup(widget)
         end
 
         -- colors
-        widget.text_color = widget.textColor
+        widget.text_color = lcd.themeColor(THEME_DEFAULT_COLOR)
     else
         -- not connected
         widget.throttle = "**"
@@ -637,9 +643,6 @@ local function configure(widget)
     local line = form.addLine("ESC status")
     form.addSourceField(line, nil, function() return widget.sensorEscFlags end, function(value) widget.sensorEscFlags = value end)
 
-    line = form.addLine("Text color")
-    form.addColorField(line, nil, function() return widget.textColor end, function(value) widget.textColor = value end)
-
     -- version
     line = form.addLine("Version")
     form.addStaticText(line, nil, version)
@@ -656,8 +659,6 @@ local function read(widget)
     widget.sensorThr = storage.read("sensorThr")
     widget.sensorEscSig = storage.read("sensorEscSig")
     widget.sensorEscFlags = storage.read("sensorEscFlags")
-
-    widget.textColor = storage.read("textColor")
 end
 
 
@@ -671,8 +672,6 @@ local function write(widget)
     storage.write("sensorThr", widget.sensorThr)
     storage.write("sensorEscSig", widget.sensorEscSig)
     storage.write("sensorEscFlags", widget.sensorEscFlags)
-
-    storage.write("textColor", widget.textColor)
 end
 
 

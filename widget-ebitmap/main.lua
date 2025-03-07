@@ -20,7 +20,7 @@
 -- Author: Rob Gayle (bob00@rogers.com)
 -- Thanks to Rob Thomson for the rfSuite interop
 -- Date: 2025
-local version = "v0.2.4"
+local version = "v0.2.5"
 
 -- metadata
 local widgetDir = "/scripts/widget-ebitmap/"
@@ -54,7 +54,6 @@ local function create()
     {
         -- options
         useFblParams = rfsuite and rfsuite.session ~= nil,
-        textColor = lcd.themeColor(THEME_DEFAULT_COLOR),
         textAlignment = TEXT_CENTERED,
 
         -- constant
@@ -102,7 +101,7 @@ local function paint(widget)
     else
         tx = box_left + box_width - margin * 2
     end
-    lcd.color(widget.textColor)
+    lcd.color(lcd.themeColor(THEME_DEFAULT_COLOR))
     lcd.drawText(tx, box_top + margin, widget.craftName or widget.modelName or "---", widget.textAlignment)
 end
 
@@ -154,9 +153,6 @@ local function configure(widget)
     local field = form.addBooleanField(line, nil, function() return craftNameAvailable and widget.useFblParams end, function(value) widget.useFblParams = value end)
     field:enable(craftNameAvailable)
 
-    line = form.addLine("Text color")
-    form.addColorField(line, nil, function() return widget.textColor end, function(value) widget.textColor = value end)
-
     line = form.addLine("Text alignment")
     form.addChoiceField(line, nil, textAlignment, function() return widget.textAlignment end, function(value) widget.textAlignment = value end)
 
@@ -172,7 +168,6 @@ local function read(widget)
     local version = storage.read("version")
 
     widget.useFblParams = storage.read("useFblParams")
-    widget.textColor = storage.read("textColor")
     widget.textAlignment = storage.read("textAlignment")
 end
 
@@ -182,7 +177,6 @@ local function write(widget)
     storage.write("version", 1)
 
     storage.write("useFblParams", widget.useFblParams)
-    storage.write("textColor", widget.textColor)
     storage.write("textAlignment", widget.textAlignment)
 end
 
