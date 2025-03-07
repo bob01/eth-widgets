@@ -547,7 +547,7 @@ end
 
 -- initialize / register widget
 local function init()
-    system.registerWidget({ key = "rngbar0", name = name, create = create, paint = paint, wakeup = wakeup, configure = configure, read = read, write = write })
+    system.registerWidget({ key = "rngbar0", name = name, create = create, paint = paint, wakeup = wakeup, configure = configure, read = read, write = write, title = false })
 end
 
 return { init = init }
