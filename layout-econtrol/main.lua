@@ -19,15 +19,32 @@
 ]]
 -- Author: Rob Gayle (bob00@rogers.com)
 -- Date: 2025
-local version = "v0.2.0"
+local version = "v0.2.2"
 
 local function init()
     -- extents
     local sx = 0
-    local sy = 95
-    local sw = 800
-    local sh = 336
+    local sy
+    local sw
+    local sh
     local sp = 8
+
+    -- get screen size
+    local version = system.getVersion()
+    sw = version.lcdWidth
+    if version.lcdHeight == 480 then
+      -- X20S family (800x480)
+      sy = 95
+      sh = 336
+    elseif version.lcdHeight == 320 then
+      -- X18 family (480x320)
+      sy = 60
+      sh = 240
+    else
+      -- unsupported
+      sy = 60
+      sh = 240
+    end
 
     -- left pane width, cell heights
     local cwl = sw * 2 / 3
