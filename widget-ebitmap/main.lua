@@ -117,7 +117,7 @@ local function wakeup(widget)
     -- craft name
     if widget.useFblParams then
         -- use rfsuite
-        local craftName = rfsuite.session.craftName
+        local craftName = rfsuite.session ~= nil and rfsuite.session.craftName or nil
         if craftName and widget.craftName ~= craftName then
             widget.craftName = craftName
             lcd.invalidate()

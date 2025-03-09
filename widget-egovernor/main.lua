@@ -19,7 +19,7 @@
 ]]
 -- Author: Rob Gayle (bob00@rogers.com)
 -- Date: 2025
-local version = "v0.2.6"
+local version = "v0.2.8"
 
 -- metadata
 local widgetDir = "/scripts/widget-egovernor/"
@@ -325,6 +325,91 @@ local function flyGetStatus(code, changed)
 end
 
 --------------------------------------------------------------
+-- OMP telemetry
+
+-- * Status Code bits:
+-- *    0:  Short-circuit protection
+-- *    1:  Motor connection error
+-- *    2:  Throttle signal lost
+-- *    3:  Throttle signal >0 on startup error
+-- *    4:  Low voltage protection
+-- *    5:  Temperature protection
+-- *    6:  Startup protection
+-- *    7:  Current protection
+-- *    8:  Throttle signal error
+-- *   12:  Battery voltage error
+
+local function ompGetStatus(code, changed)
+   local text = "OMP ESC OK"
+   local level = LEVEL_INFO
+   -- just report highest order bit (most severe)
+--    if code ~= 0 then
+--         text = string.format("code (%02X)", code)
+--         level = LEVEL_WARN
+--    end
+   for bit = 0, 12 do
+       if (code & (1 << bit)) ~= 0 then
+            if bit == 0 then
+                text = "ESC Short Circuit"
+                level = LEVEL_ERROR
+                break
+            elseif bit == 1 then
+                text = "ESC Motor Connection"
+                level = LEVEL_ERROR
+                break
+            elseif bit == 2 then
+                text = "ESC Throttle Lost"
+                level = LEVEL_WARN
+                break
+            elseif bit == 3 then
+                text = "ESC Throttle Startup"
+                level = LEVEL_ERROR
+                break
+            elseif bit == 4 then
+                text = "ESC Low Voltage"
+                level = LEVEL_ERROR
+                break
+            elseif bit == 5 then
+                text = "ESC Over Temp"
+                level = LEVEL_ERROR
+                break
+            elseif bit == 6 then
+                text = "ESC Startup"
+                level = LEVEL_ERROR
+                break
+            elseif bit == 7 then
+                text = "ESC Overcurrent"
+                level = LEVEL_ERROR
+                break
+            elseif bit == 8 then
+                text = "ESC Throttle Signal"
+                level = LEVEL_WARN
+                break
+            elseif bit == 12 then
+                text = "ESC Battery Voltage"
+                level = LEVEL_ERROR
+                break
+            end
+       end
+   end
+   return { text = text, level = level }
+end
+
+--------------------------------------------------------------
+-- unknown ESC
+
+local function unkGetStatus(code, changed)
+    local text = escstatus_text
+    local level = LEVEL_INFO
+
+    if code ~= 0 then
+        text = string.format("ESC status code (%04X)", code)
+    end
+
+    return { text = text, level = level }
+ end
+
+--------------------------------------------------------------
 
 local function resetStatus()
    escstatus_text = nil
@@ -366,7 +451,7 @@ local function create()
         -- sensors
         sensorArm = system.getSource("Arming Flags")            or system.getSource({ category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5122 }),
         sensorArmDisabled = system.getSource("Arming Disable")  or system.getSource({ category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5123 }),
-        sensorGov = system.getSource("Governor")                or system.getSource({ category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5125 }),
+        sensorGov = system.getSource("Governor")                or system.getSource({ category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5125 }) or system.getSource("Governor Flags"),
         sensorThr = system.getSource("Throttle %")              or system.getSource({ category = CATEGORY_TELEMETRY_SENSOR, appId = 0x51A4 }),
         sensorEscSig = system.getSource("ESC1 Model ID")        or system.getSource({ category = CATEGORY_TELEMETRY_SENSOR, appId = 0x512B }),
         sensorEscFlags = system.getSource("ESC1 Status")        or system.getSource({ category = CATEGORY_TELEMETRY_SENSOR, appId = 0x512A }),
@@ -574,8 +659,12 @@ local function wakeup(widget)
                 elseif escSig == ESC_SIG_FLY then
                     escGetStatus = flyGetStatus
                     escResetStatus = resetStatus
+                elseif escSig == ESC_SIG_OMP then
+                    escGetStatus = ompGetStatus
+                    escResetStatus = resetStatus
                 elseif escSig ~= ESC_SIG_NONE then
                     escstatus_text = "Unrecognized ESC"..string.format(" (%02X)", escSig)
+                    escGetStatus = unkGetStatus
                 end
                 escstatus_level = LEVEL_INFO
                 lcd.invalidate()
