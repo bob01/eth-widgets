@@ -19,7 +19,7 @@
 ]]
 -- Author: Rob Gayle (bob00@rogers.com)
 -- Date: 2025
-local version = "v0.2.2"
+local version = "v0.2.3"
 
 local function init()
     -- extents
