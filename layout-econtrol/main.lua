@@ -19,7 +19,7 @@
 ]]
 -- Author: Rob Gayle (bob00@rogers.com)
 -- Date: 2025
-local version = "v0.2.3"
+local version = "v0.2.4"
 
 local function init()
     -- extents
@@ -50,7 +50,7 @@ local function init()
     local cwl = sw * 2 / 3
     local ch = sh / 4
 
-    -- layout
+    -- control layout
     local widgets = {}
 
     -- row 1
@@ -59,13 +59,10 @@ local function init()
     local cwb = cwl / 4
     local cw = cwb
     widgets[#widgets + 1] = { x = x,        y = y,          w = cwb - sp,       h = ch - sp }
-
     x = x + cw
     widgets[#widgets + 1] = { x = x,        y = y,          w = cw - sp,        h = ch - sp }
-
     x = x + cw
     widgets[#widgets + 1] = { x = x,        y = y,          w = cw - sp,        h = ch - sp }
-
     x = x + cw
     widgets[#widgets + 1] = { x = x,        y = y,          w = cw - sp,        h = ch - sp }
 
@@ -80,7 +77,6 @@ local function init()
     cwb = cwl / 2
     cw = cwb
     widgets[#widgets + 1] = { x = x,        y = y,          w = cw - sp,        h = ch - sp }
-
     x = x + cw
     widgets[#widgets + 1] = { x = x,        y = y,          w = cw - sp,        h = ch - sp }
 
@@ -89,7 +85,6 @@ local function init()
     y = y + ch
     cw = cwl
     widgets[#widgets + 1] = { x = x,        y = y,          w = cw - sp,        h = ch - sp }
-
     x = x + cw
     cw = sw - cwl
     widgets[#widgets + 1] = { x = x,        y = y,          w = cw,             h = ch - sp }
@@ -100,6 +95,27 @@ local function init()
 
     -- register
     system.registerLayout({ key = "rngelay0", widgets = widgets })
+
+
+    -- summary layout
+    widgets = {}
+    cw = sw / 4
+    ch = sh / 3
+
+    y = sy
+    for row = 1, 3 do
+      -- for each row
+      x = sx + sp / 2
+      for col = 1, 4 do
+        -- for each column
+        widgets[#widgets + 1] = { x = x,        y = y,          w = cw - sp,        h = ch - sp }
+        x = x + cw
+      end
+      y = y + ch
+    end
+
+    -- register
+    system.registerLayout({ key = "rngesum0", widgets = widgets })
   end
 
   return { init = init }
