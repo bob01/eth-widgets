@@ -19,7 +19,7 @@
 ]]
 -- Author: Rob Gayle (bob00@rogers.com)
 -- Date: 2025
-local version = "v0.2.8"
+local version = "v0.3.0"
 
 -- metadata
 local widgetDir = "/scripts/widget-egovernor/"
@@ -456,6 +456,8 @@ local function create()
         sensorEscSig = system.getSource("ESC1 Model ID")        or system.getSource({ category = CATEGORY_TELEMETRY_SENSOR, appId = 0x512B }),
         sensorEscFlags = system.getSource("ESC1 Status")        or system.getSource({ category = CATEGORY_TELEMETRY_SENSOR, appId = 0x512A }),
 
+        mute = false,
+
         -- state
         active = false,
 
@@ -568,7 +570,9 @@ local armDisabledDescs = {
 -- process sensors, pre-render and announce
 local function wakeup(widget)
     -- telemetry active?
-    local active = widget.sensorArm and widget.sensorArm:state()
+    local active = widget.sensorArm and
+                    ((widget.sensorArm:category() == CATEGORY_TELEMETRY_SENSOR and widget.sensorArm:state()) or
+                     (widget.sensorArm:category() == CATEGORY_LOGIC_SWITCH))
     if widget.active ~= active then
         widget.active = active
         lcd.invalidate()
@@ -581,7 +585,12 @@ local function wakeup(widget)
 
         -- armed?
         local val = widget.sensorArm and widget.sensorArm:value()
-        local armed = val and (val & 0x01) == 0x01
+        local armed
+        if widget.sensorArm:category() == CATEGORY_TELEMETRY_SENSOR then
+            armed = val and (val & 0x01) == 0x01
+        else
+            armed = widget.sensorArm:state()
+        end
 
         if armed then
             -- armed, get ESC throttle if configured
@@ -589,7 +598,11 @@ local function wakeup(widget)
             if widget.thro ~= thro then
                 widget.thro = thro
                 if thro then
-                    widget.throttle = string.format("%d%%", thro)
+                    if widget.sensorThr:category() == CATEGORY_CHANNEL then
+                        -- convert -1024 / 1024 throttle range to %
+                        thro = (thro + 1024) * 100 / 2048
+                    end
+                    widget.throttle = string.format("%0.0f%%", thro)
                 else
                     widget.throttle = "--"
                 end
@@ -683,7 +696,7 @@ local function wakeup(widget)
         end
 
         -- announce if armed state changed
-        if widget.armed ~= armed then
+        if not widget.mute and widget.armed ~= armed then
             local locale = "en"
             if armed then
                 system.playFile(widgetDir .. "sounds/" .. locale .. "/armed.wav")
@@ -732,6 +745,11 @@ local function configure(widget)
     local line = form.addLine("ESC status")
     form.addSourceField(line, nil, function() return widget.sensorEscFlags end, function(value) widget.sensorEscFlags = value end)
 
+    -- mute
+    line = form.addLine("Mute (voice and vibration)")
+    field = form.addBooleanField(line, nil, function() return widget.mute end, function(newValue) widget.mute = newValue end)
+
+
     -- version
     line = form.addLine("Version")
     form.addStaticText(line, nil, version)
@@ -748,6 +766,7 @@ local function read(widget)
     widget.sensorThr = storage.read("sensorThr")
     widget.sensorEscSig = storage.read("sensorEscSig")
     widget.sensorEscFlags = storage.read("sensorEscFlags")
+    widget.mute = storage.read("mute")
 end
 
 
@@ -761,6 +780,7 @@ local function write(widget)
     storage.write("sensorThr", widget.sensorThr)
     storage.write("sensorEscSig", widget.sensorEscSig)
     storage.write("sensorEscFlags", widget.sensorEscFlags)
+    storage.write("mute", widget.mute)
 end
 
 
