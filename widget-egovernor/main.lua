@@ -19,7 +19,7 @@
 ]]
 -- Author: Rob Gayle (bob00@rogers.com)
 -- Date: 2025
-local version = "v0.3.0"
+local version = "v0.3.2"
 
 -- metadata
 local widgetDir = "/scripts/widget-egovernor/"
@@ -502,7 +502,7 @@ local function paint(widget)
         text = escstatus_text
         color = widget.escstatus_color
     end
-    -- text = "Scorpion ESC OK"
+
     -- color = WHITE
     if text then
         lcd.font(FONT_STD)
@@ -647,7 +647,7 @@ local function wakeup(widget)
                 end
             end
         else
-            govStatus = "--"
+            govStatus = ""
         end
         if widget.fmode ~= govStatus then
             widget.fmode = govStatus
