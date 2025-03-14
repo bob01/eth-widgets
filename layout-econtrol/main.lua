@@ -30,7 +30,7 @@ local function init()
     local sp = 8
     local trimx
     local trimy
-    local twl
+    local trimw
 
     -- get screen size
     local version = system.getVersion()
@@ -41,21 +41,21 @@ local function init()
       sh = 336
       trimx = 40
       trimy = 40
-      twl = sw / 2.65
+      trimw = sw / 2.65
     elseif version.lcdHeight == 320 then
       -- X18 family (480x320)
       sy = 60
       sh = 240
       trimx = 24
       trimy = 24
-      twl = sw / 2.4
+      trimw = sw / 2.4
     else
       -- unsupported
       sy = 60
       sh = 240
       trimx = 24
       trimy = 24
-      twl = sw / 2.4
+      trimw = sw / 2.4
     end
 
     -- left pane width, cell heights
@@ -180,7 +180,7 @@ local function init()
     h = th
     trims[#trims + 1] =     { x = x,         y = y,        w = trimx,          h = h }
     -- aileron
-    x = sw - (twl + sp)
+    x = sw - (trimw + sp)
     y = ty + th - sp
     w = (tw - trimx) / 2
     trims[#trims + 1] =     { x = x,         y = y,        w = w,              h = trimy }
