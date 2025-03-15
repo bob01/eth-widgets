@@ -19,7 +19,7 @@
 ]]
 -- Author: Rob Gayle (bob00@rogers.com)
 -- Date: 2025
-local version = "v0.3.2"
+local version = "v0.3.4"
 
 -- metadata
 local widgetDir = "/scripts/widget-egovernor/"
@@ -455,6 +455,7 @@ local function create()
         sensorThr = system.getSource("Throttle %")              or system.getSource({ category = CATEGORY_TELEMETRY_SENSOR, appId = 0x51A4 }),
         sensorEscSig = system.getSource("ESC1 Model ID")        or system.getSource({ category = CATEGORY_TELEMETRY_SENSOR, appId = 0x512B }),
         sensorEscFlags = system.getSource("ESC1 Status")        or system.getSource({ category = CATEGORY_TELEMETRY_SENSOR, appId = 0x512A }),
+        sensorStabGain = system.getSource({ category = CATEGORY_CHANNEL, name = "CH13 (Stab Gain)" }),  -- easter egg #1
 
         mute = false,
 
@@ -465,6 +466,7 @@ local function create()
         thro = nil,
         throttle = "",
         fmode = "",
+        stabGain = nil,
         sig = ESC_SIG_NONE,
 
         text_color = colorDefaultTheme,
@@ -486,14 +488,26 @@ local function paint(widget)
     -- colors
     local colorGrey = lcd.darkMode() and lcd.GREY(0xBF) or lcd.GREY(0x3F)
 
+    -- title (or stabGain -- easter egg #1)
+    local text
+    local font
+    if widget.stabGain then
+        -- stab rx gain
+        font = FONT_STD
+        text = string.format("Stabilizer gain %0.0f%%", widget.stabGain * 100 / 1024)
+    else
+        -- title
+        font = FONT_S
+        text = widget.sensorGov and "Governor" or "Throttle"
+    end
+
     -- title
-    lcd.font(FONT_S)
+    lcd.font(font)
     lcd.color(colorGrey)
     local _, text_h = lcd.getTextSize("")
-    lcd.drawText(box_left + margin, box_top + margin / 2, "Governor")
+    lcd.drawText(box_left + margin, box_top + margin / 2, text)
 
     -- ESC status
-    local text
     local color
     if widget.sig == ESC_SIG_RESTART then
         text = "RESTART ESC"
@@ -654,6 +668,13 @@ local function wakeup(widget)
             lcd.invalidate()
         end
 
+        -- FrSky stabilized rx -- easter egg #1
+        local stabGain = widget.sensorStabGain and widget.sensorStabGain:value()
+        if widget.stabGain ~= stabGain then
+            widget.stabGain = stabGain
+            lcd.invalidate()
+        end
+
         -- ESC sig
         local escSig = widget.sensorEscSig and widget.sensorEscSig:category() == CATEGORY_TELEMETRY_SENSOR and widget.sensorEscSig:value()
         local escFlags = widget.sensorEscFlags and widget.sensorEscFlags:category() == CATEGORY_TELEMETRY_SENSOR and widget.sensorEscFlags:value()
@@ -730,24 +751,27 @@ local function configure(widget)
     local line = form.addLine("Arming flags")
     form.addSourceField(line, nil, function() return widget.sensorArm end, function(value) widget.sensorArm = value end)
 
-    local line = form.addLine("Arming disable flags")
+    line = form.addLine("Arming disable flags")
     form.addSourceField(line, nil, function() return widget.sensorArmDisabled end, function(value) widget.sensorArmDisabled = value end)
 
-    local line = form.addLine("Governor state")
+    line = form.addLine("Governor state")
     form.addSourceField(line, nil, function() return widget.sensorGov end, function(value) widget.sensorGov = value end)
 
-    local line = form.addLine("ESC or GOV throttle")
+    line = form.addLine("ESC or GOV throttle")
     form.addSourceField(line, nil, function() return widget.sensorThr end, function(value) widget.sensorThr = value end)
 
-    local line = form.addLine("ESC model id")
+    line = form.addLine("ESC model id")
     form.addSourceField(line, nil, function() return widget.sensorEscSig end, function(value) widget.sensorEscSig = value end)
 
-    local line = form.addLine("ESC status")
+    line = form.addLine("ESC status")
     form.addSourceField(line, nil, function() return widget.sensorEscFlags end, function(value) widget.sensorEscFlags = value end)
+
+    line = form.addLine("Stabilizer gain (fixed wing only)")
+    form.addSourceField(line, nil, function() return widget.sensorStabGain end, function(value) widget.sensorStabGain = value end)
 
     -- mute
     line = form.addLine("Mute (voice and vibration)")
-    field = form.addBooleanField(line, nil, function() return widget.mute end, function(newValue) widget.mute = newValue end)
+    form.addBooleanField(line, nil, function() return widget.mute end, function(newValue) widget.mute = newValue end)
 
 
     -- version

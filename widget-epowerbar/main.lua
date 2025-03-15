@@ -464,7 +464,7 @@ local function configure(widget)
     field = form.addBooleanField(line, nil, function() return widget.minimal end, function(newValue) widget.volts = nil widget.minimal = newValue end)
 
     -- Alerts
-    panel = form.addExpansionPanel("Voltage alerts")
+    local panel = form.addExpansionPanel("Voltage alerts")
     panel:open(false)
 
     line = panel:addLine("Active condition")
