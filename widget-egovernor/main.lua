@@ -19,7 +19,7 @@
 ]]
 -- Author: Rob Gayle (bob00@rogers.com)
 -- Date: 2025
-local version = "v0.3.4"
+local version = "v0.3.5"
 
 -- metadata
 local widgetDir = "/scripts/widget-egovernor/"
@@ -760,14 +760,11 @@ local function configure(widget)
     line = form.addLine("ESC or GOV throttle")
     form.addSourceField(line, nil, function() return widget.sensorThr end, function(value) widget.sensorThr = value end)
 
-    line = form.addLine("ESC model id")
+    line = form.addLine("ESC model ID")
     form.addSourceField(line, nil, function() return widget.sensorEscSig end, function(value) widget.sensorEscSig = value end)
 
     line = form.addLine("ESC status")
     form.addSourceField(line, nil, function() return widget.sensorEscFlags end, function(value) widget.sensorEscFlags = value end)
-
-    line = form.addLine("Stabilizer gain (fixed wing only)")
-    form.addSourceField(line, nil, function() return widget.sensorStabGain end, function(value) widget.sensorStabGain = value end)
 
     -- mute
     line = form.addLine("Mute (voice and vibration)")
