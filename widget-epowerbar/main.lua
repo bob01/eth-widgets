@@ -19,7 +19,7 @@
 ]]
 -- Author: Rob Gayle (bob00@rogers.com)
 -- Date: 2024, 2025
-local version = "v0.9.8.5"
+local version = "v0.9.9"
 
 -- metadata
 local widgetDir = "/scripts/widget-epowerbar/"
@@ -43,9 +43,9 @@ local function create()
     local widget =
     {
         -- sensors
-        voltageSensor = system.getSource("Voltage")     or system.getSource({ category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0210 }) or system.getSource("VFAS"),
+        voltageSensor = system.getSource("Voltage")     or system.getSource({ category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0210 }) or system.getSource("VFAS") or system.getSource("ESC voltage"),
         cellsSensor = system.getSource("Cell Count")    or system.getSource({ category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5260 }),
-        mahSensor = system.getSource("Consumption")     or system.getSource({ category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5250 }) or system.getSource("Capa") or system.getSource("mAh"),
+        mahSensor = system.getSource("Consumption")     or system.getSource({ category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5250 }) or system.getSource("Capa") or system.getSource("ESC consumption") or system.getSource("mAh"),
         fuelSensor = system.getSource("Charge Level")   or system.getSource({ category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0600 }) or system.getSource("Fuel"),
 
         -- display

@@ -455,7 +455,9 @@ local function create()
         sensorThr = system.getSource("Throttle %")              or system.getSource({ category = CATEGORY_TELEMETRY_SENSOR, appId = 0x51A4 }),
         sensorEscSig = system.getSource("ESC1 Model ID")        or system.getSource({ category = CATEGORY_TELEMETRY_SENSOR, appId = 0x512B }),
         sensorEscFlags = system.getSource("ESC1 Status")        or system.getSource({ category = CATEGORY_TELEMETRY_SENSOR, appId = 0x512A }),
-        sensorStabGain = system.getSource({ category = CATEGORY_CHANNEL, name = "CH13 (Stab Gain)" }),  -- easter egg #1
+        -- easter egg #1
+        sensorStabGain = system.getSource({ category = CATEGORY_CHANNEL, name = "CH13 (Stab Gain)" }) or system.getSource({ category = CATEGORY_CHANNEL, name = "CH13 (Gain adj.)" }),
+        sensorStabMode = system.getSource({ category = CATEGORY_CHANNEL, name = "CH14 (Stab mode 1)" }),
 
         mute = false,
 
@@ -467,6 +469,7 @@ local function create()
         throttle = "",
         fmode = "",
         stabGain = nil,
+        stabMode = nil,
         sig = ESC_SIG_NONE,
 
         text_color = colorDefaultTheme,
@@ -494,7 +497,10 @@ local function paint(widget)
     if widget.stabGain then
         -- stab rx gain
         font = FONT_STD
-        text = string.format("Stabilizer gain %0.0f%%", widget.stabGain * 100 / 1024)
+        text = string.format("Gyro gain %0.0f%%%s", widget.stabGain * 100 / 1024, 
+            (not widget.stabMode and "") or 
+            (widget.stabMode < 0 and " (Level)") or 
+            (widget.stabMode > 0 and " (Off)") or " (Stabilize)")
     else
         -- title
         font = FONT_S
@@ -672,6 +678,12 @@ local function wakeup(widget)
         local stabGain = widget.sensorStabGain and widget.sensorStabGain:value()
         if widget.stabGain ~= stabGain then
             widget.stabGain = stabGain
+            lcd.invalidate()
+        end
+
+        local stabMode = widget.sensorStabMode and widget.sensorStabMode:value()
+        if widget.stabMode ~= stabMode then
+            widget.stabMode = stabMode
             lcd.invalidate()
         end
 
