@@ -497,10 +497,11 @@ local function paint(widget)
     if widget.stabGain then
         -- stab rx gain
         font = FONT_STD
-        text = string.format("Gyro gain %0.0f%%%s", widget.stabGain * 100 / 1024, 
-            (not widget.stabMode and "") or 
-            (widget.stabMode < 0 and " (Level)") or 
-            (widget.stabMode > 0 and " (Off)") or " (Stabilize)")
+        text = string.format("Stabilizer gain %0.0f%%", widget.stabGain * 100 / 1024)
+        if widget.stabMode then
+            local textMode = (widget.stabMode < 0 and ", level") or (widget.stabMode > 0 and ", off") or ", stabilize"
+            text = text .. textMode
+        end
     else
         -- title
         font = FONT_S
