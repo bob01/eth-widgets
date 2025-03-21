@@ -19,7 +19,7 @@
 ]]
 -- Author: Rob Gayle (bob00@rogers.com)
 -- Date: 2025
-local version = "v0.3.5"
+local version = "v0.8.0"
 
 -- metadata
 local widgetDir = "/scripts/widget-egovernor/"
@@ -588,8 +588,26 @@ local armDisabledDescs = {
 }
 
 
+local function nilNoneSource(source)
+    if source and source:category() == CATEGORY_NONE then
+        return nil
+    else
+        return source
+    end
+end
+
 -- process sensors, pre-render and announce
 local function wakeup(widget)
+    -- nil CATEGORY_NONE sensors
+    -- widget.sensorArm            = nilNoneSource(widget.sensorArm)
+    -- widget.sensorArmDisabled    = nilNoneSource(widget.sensorArmDisabled)
+    -- widget.sensorGov            = nilNoneSource(widget.sensorGov)
+    -- widget.sensorThr            = nilNoneSource(widget.sensorThr)
+    -- widget.sensorEscSig         = nilNoneSource(widget.sensorEscSig)
+    -- widget.sensorEscFlags       = nilNoneSource(widget.sensorEscFlags)
+    -- widget.sensorStabGain       = nilNoneSource(widget.sensorStabGain)
+    -- widget.sensorStabMode       = nilNoneSource(widget.sensorStabMode)
+
     -- telemetry active?
     local active = widget.sensorArm and
                     ((widget.sensorArm:category() == CATEGORY_TELEMETRY_SENSOR and widget.sensorArm:state()) or
@@ -598,8 +616,6 @@ local function wakeup(widget)
         widget.active = active
         lcd.invalidate()
     end
-
-    -- print("####" .. widget.sensorArmDisabled:name() .. "####")
 
     if widget.active then
         -- TODO connected stuff ####
@@ -762,22 +778,22 @@ end
 local function configure(widget)
     -- Sensor choices
     local line = form.addLine("Arming flags")
-    form.addSourceField(line, nil, function() return widget.sensorArm end, function(value) widget.sensorArm = value end)
+    form.addSourceField(line, nil, function() return widget.sensorArm end, function(value) widget.sensorArm = nilNoneSource(value) end)
 
     line = form.addLine("Arming disable flags")
-    form.addSourceField(line, nil, function() return widget.sensorArmDisabled end, function(value) widget.sensorArmDisabled = value end)
+    form.addSourceField(line, nil, function() return widget.sensorArmDisabled end, function(value) widget.sensorArmDisabled = nilNoneSource(value) end)
 
     line = form.addLine("Governor state")
-    form.addSourceField(line, nil, function() return widget.sensorGov end, function(value) widget.sensorGov = value end)
+    form.addSourceField(line, nil, function() return widget.sensorGov end, function(value) widget.sensorGov = nilNoneSource(value) end)
 
     line = form.addLine("ESC or GOV throttle")
-    form.addSourceField(line, nil, function() return widget.sensorThr end, function(value) widget.sensorThr = value end)
+    form.addSourceField(line, nil, function() return widget.sensorThr end, function(value) widget.sensorThr = nilNoneSource(value) end)
 
     line = form.addLine("ESC model ID")
-    form.addSourceField(line, nil, function() return widget.sensorEscSig end, function(value) widget.sensorEscSig = value end)
+    form.addSourceField(line, nil, function() return widget.sensorEscSig end, function(value) widget.sensorEscSig = nilNoneSource(value) end)
 
     line = form.addLine("ESC status")
-    form.addSourceField(line, nil, function() return widget.sensorEscFlags end, function(value) widget.sensorEscFlags = value end)
+    form.addSourceField(line, nil, function() return widget.sensorEscFlags end, function(value) widget.sensorEscFlags = nilNoneSource(value) end)
 
     -- mute
     line = form.addLine("Mute (voice and vibration)")
@@ -794,12 +810,13 @@ end
 local function read(widget)
     local version = storage.read("version")
 
-    widget.sensorArm = storage.read("sensorArm")
-    widget.sensorArmDisabled = storage.read("sensorArmDisabled")
-    widget.sensorGov = storage.read("sensorGov")
-    widget.sensorThr = storage.read("sensorThr")
-    widget.sensorEscSig = storage.read("sensorEscSig")
-    widget.sensorEscFlags = storage.read("sensorEscFlags")
+    widget.sensorArm            = nilNoneSource(storage.read("sensorArm"))
+    widget.sensorArmDisabled    = nilNoneSource(storage.read("sensorArmDisabled"))
+    widget.sensorGov            = nilNoneSource(storage.read("sensorGov"))
+    widget.sensorThr            = nilNoneSource(storage.read("sensorThr"))
+    widget.sensorEscSig         = nilNoneSource(storage.read("sensorEscSig"))
+    widget.sensorEscFlags       = nilNoneSource(storage.read("sensorEscFlags"))
+
     widget.mute = storage.read("mute")
 end
 

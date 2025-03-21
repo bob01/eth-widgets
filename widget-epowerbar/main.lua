@@ -19,7 +19,7 @@
 ]]
 -- Author: Rob Gayle (bob00@rogers.com)
 -- Date: 2024, 2025
-local version = "v0.9.9"
+local version = "v1.0.1"
 
 -- metadata
 local widgetDir = "/scripts/widget-epowerbar/"
@@ -80,7 +80,7 @@ local function create()
         low = 10,
 
         -- alerts
-        alertActiveCondition = nil,
+        alertActiveCondition = system.getSource(CATEGORY_ALWAYS_ON),
         alertCellLow = 345,
         alertCellCitical = 330,
         alertPending = 0,
@@ -235,16 +235,6 @@ end
 
 -- audio voltage alerts
 local function crankVoltageAlerts(widget)
-    -- bail if active condition not set or met
-    if widget.alertActiveCondition then
-        local active = widget.alertActiveCondition:value()
-        if not active or active < 0 then
-            return
-        end
-    else
-        return
-    end
-
     -- bail if not active or no voltage value
     if not widget.active or widget.volts == nil then
         return
@@ -308,8 +298,22 @@ local function crankVoltageAlerts(widget)
 end
 
 
+local function nilNoneSource(source)
+    if source and source:category() == CATEGORY_NONE then
+        return nil
+    else
+        return source
+    end
+end
+
 -- process sensors, pre-render and announce
 local function wakeup(widget)
+    -- nil CATEGORY_NONE sensors
+    -- widget.voltageSensor    = nilNoneSource(widget.voltageSensor)
+    -- widget.cellsSensor      = nilNoneSource(widget.cellsSensor)
+    -- widget.mahSensor        = nilNoneSource(widget.mahSensor)
+    -- widget.fuelSensor       = nilNoneSource(widget.fuelSensor)
+
     -- telemetry active?
     local active = widget.voltageSensor and widget.voltageSensor:state()
     if widget.active ~= active then
@@ -320,7 +324,7 @@ local function wakeup(widget)
 
     -- cells
     local cells = nil
-    if widget.cellsSensor and widget.cellsSensor:category() ~= CATEGORY_NONE then
+    if widget.cellsSensor then
         -- use sensor cell count
         cells = widget.cellsSensor:value()
     else
@@ -341,8 +345,6 @@ local function wakeup(widget)
         widget.textVolts = (widget.minimal and string.format("%.2fv", volts / widget.cells) or string.format("%.1fv / %.2fv (%.0fs)", volts, volts / widget.cells, widget.cells)) or nil
         lcd.invalidate()
     end
-    
-    -- print("v=" .. (volts or 'nil') .. ", cc=" .. (cells or 'nil'))
 
     -- mah
     local mah = widget.active and widget.mahSensor and widget.mahSensor:value() or nil
@@ -355,7 +357,7 @@ local function wakeup(widget)
     -- fuel
     local fuel = nil
     if widget.active then
-        if widget.fuelSensor and widget.fuelSensor:category() ~= CATEGORY_NONE then
+        if widget.fuelSensor then
             -- use sensor
             fuel = widget.fuelSensor:value()
         elseif widget.mah and widget.capacity > 0 then
@@ -378,7 +380,7 @@ local function wakeup(widget)
         lcd.invalidate()
     end
 
-    if not widget.mute then
+    if not widget.mute and widget.alertActiveCondition and (widget.alertActiveCondition:value() > 0 or widget.alertActiveCondition:state()) then
         crankFuelCalls(widget)
         crankVoltageAlerts(widget)
     end
@@ -389,10 +391,10 @@ end
 local function configure(widget)
     -- Sensor choices
     local line = form.addLine("Voltage (v) sensor")
-    form.addSourceField(line, nil, function() return widget.voltageSensor end, function(value) widget.voltageSensor = value end)
+    form.addSourceField(line, nil, function() return widget.voltageSensor end, function(value) widget.voltageSensor = nilNoneSource(value) end)
 
     line = form.addLine("Consumption (mAh) sensor")
-    form.addSourceField(line, nil, function() return widget.mahSensor end, function(value) widget.mahSensor = value end)
+    form.addSourceField(line, nil, function() return widget.mahSensor end, function(value) widget.mahSensor = nilNoneSource(value) end)
 
     widget.capacityField = nil
     line = form.addLine("Fuel (%) sensor")
@@ -401,9 +403,9 @@ local function configure(widget)
             return widget.fuelSensor
         end,
         function(value)
-            widget.fuelSensor = value
+            widget.fuelSensor = nilNoneSource(value)
             if widget.capacityField ~= nil then
-                widget.capacityField:enable(widget.fuelSensor == nil or widget.fuelSensor:category() == CATEGORY_NONE)
+                widget.capacityField:enable(widget.fuelSensor == nil)
             end
         end
     )
@@ -414,7 +416,7 @@ local function configure(widget)
     field:suffix("mAh")
     field:default(5000)
     field:step(10)
-    field:enable(widget.fuelSensor == nil or widget.fuelSensor:category() == CATEGORY_NONE)
+    field:enable(widget.fuelSensor == nil)
     widget.capacityField = field
 
     widget.cellsField = nil
@@ -424,9 +426,9 @@ local function configure(widget)
             return widget.cellsSensor
         end,
         function(value)
-            widget.cellsSensor = value
+            widget.cellsSensor = nilNoneSource(value)
             if widget.cellsField ~= nil then
-                widget.cellsField:enable(widget.cellsSensor == nil or widget.cellsSensor:category() == CATEGORY_NONE)
+                widget.cellsField:enable(widget.cellsSensor == nil)
             end
         end
     )
@@ -436,7 +438,7 @@ local function configure(widget)
     field = form.addNumberField(line, nil, 2, 16, function() return widget.cellCount end, function(value) widget.cellCount = value end)
     field:suffix("s")
     field:default(6)
-    field:enable(widget.cellsSensor == nil or widget.cellsSensor:category() == CATEGORY_NONE)
+    field:enable(widget.cellsSensor == nil)
     widget.cellsField = field
 
     -- Reserve
@@ -468,7 +470,7 @@ local function configure(widget)
     panel:open(false)
 
     line = panel:addLine("Active condition")
-    form.addSourceField(line, nil, function() return widget.alertActiveCondition end, function(value) widget.alertActiveCondition = value end)
+    form.addSourceField(line, nil, function() return widget.alertActiveCondition end, function(value) widget.alertActiveCondition = nilNoneSource(value) end)
 
     line = panel:addLine("Low cell voltage (v)")
     field = form.addNumberField(line, nil, 0, 440, function() return widget.alertCellLow end, function(value) widget.alertCellLow = value end)
@@ -503,10 +505,11 @@ end
 local function read(widget)
     local version = storage.read("version")
 
-    widget.voltageSensor = storage.read("voltageSensor")
-    widget.mahSensor = storage.read("mahSensor")
-    widget.fuelSensor = storage.read("fuelSensor")
-    widget.cellsSensor = storage.read("cellsSensor")
+    widget.voltageSensor    = nilNoneSource(storage.read("voltageSensor"))
+    widget.mahSensor        = nilNoneSource(storage.read("mahSensor"))
+    widget.fuelSensor       = nilNoneSource(storage.read("fuelSensor"))
+    widget.cellsSensor      = nilNoneSource(storage.read("cellsSensor"))
+
     widget.reserve = storage.read("reserve")
     widget.low = storage.read("low")
     widget.cellCount = storage.read("cellCount")
@@ -514,7 +517,7 @@ local function read(widget)
     widget.minimal = storage.read("minimal")
     widget.alertCellLow = storage.read("alertCellLow")
     widget.alertCellCitical = storage.read("alertCellCitical")
-    widget.alertActiveCondition = storage.read("alertActiveCondition")
+    widget.alertActiveCondition = nilNoneSource(storage.read("alertActiveCondition"))
     widget.alertSampleDuration = storage.read("alertSampleDuration")
     widget.alertRepeatInterval = storage.read("alertRepeatInterval")
     widget.haptic = storage.read("haptic")
