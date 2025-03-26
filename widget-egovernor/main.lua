@@ -19,7 +19,7 @@
 ]]
 -- Author: Rob Gayle (bob00@rogers.com)
 -- Date: 2025
-local version = "v0.8.0"
+local version = "v0.8.1"
 
 -- metadata
 local widgetDir = "/scripts/widget-egovernor/"
@@ -456,8 +456,11 @@ local function create()
         sensorEscSig = system.getSource("ESC1 Model ID")        or system.getSource({ category = CATEGORY_TELEMETRY_SENSOR, appId = 0x512B }),
         sensorEscFlags = system.getSource("ESC1 Status")        or system.getSource({ category = CATEGORY_TELEMETRY_SENSOR, appId = 0x512A }),
         -- easter egg #1
-        sensorStabGain = system.getSource({ category = CATEGORY_CHANNEL, name = "CH13 (Stab Gain)" }) or system.getSource({ category = CATEGORY_CHANNEL, name = "CH13 (Gain adj.)" }),
-        sensorStabMode = system.getSource({ category = CATEGORY_CHANNEL, name = "CH14 (Stab mode 1)" }),
+        sensorStabGain = system.getSource({ category = CATEGORY_CHANNEL, name = "CH13 (Stab gain)" }) or
+                         system.getSource({ category = CATEGORY_CHANNEL, name = "CH13 (Stab Gain)" }) or
+                         system.getSource({ category = CATEGORY_CHANNEL, name = "CH13 (Gain adj.)" }),
+        sensorStabMode = system.getSource({ category = CATEGORY_CHANNEL, name = "CH14 (Stab mode 1)" }) or
+                         system.getSource({ category = CATEGORY_CHANNEL, name = "CH14 (Stab Mode 1)" }),
 
         mute = false,
 
