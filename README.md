@@ -26,7 +26,7 @@ The goal is to present the relevant telemetry expected from modern R/C systems b
 - changes color to yellow at 30% and red for the last 20% or...
 - allows specification of a "reserve" %. In that case pilot flys to 0, bar goes red if pilot chooses to go further
 - critial alerts will be accompanied by a haptic vibe
-- voltage alerts when cell voltages below low or critical thresholds can be always on or based on some condition
+- voltage alerts when cell voltages below low or critical thresholds can be always on or based on a condition
 
 ### Settings
 ![image](https://github.com/user-attachments/assets/2f49aa7b-116e-4d1e-ad78-8a28c4bd4f5f)
@@ -37,6 +37,8 @@ The goal is to present the relevant telemetry expected from modern R/C systems b
 # eGovernor
 ![image](https://github.com/user-attachments/assets/eb71ebbd-2f91-4f79-ba94-80c9d7a3831f)
 ![image](https://github.com/user-attachments/assets/681b1763-7c65-4119-8b77-e6772a0fcb84)
+![image](https://github.com/user-attachments/assets/03e902d5-5368-4051-b88f-2e2f649c267f)
+
 
 ### Features
 - uses RotorFlight's (FC) flight mode telemetry sensor to indicate the actual true "safe" / "armed" state of the flight controller w/ voice callout
@@ -48,7 +50,24 @@ The goal is to present the relevant telemetry expected from modern R/C systems b
 ![image](https://github.com/user-attachments/assets/aa46cb99-8f5a-4300-9fed-29326d6ebf50)
 ![image](https://github.com/user-attachments/assets/473fba76-081d-47e1-aee5-3572a42d8137)
 
+# eBitmap
+![image](https://github.com/user-attachments/assets/591fb44e-7c38-45f7-9086-a0515c5b5111)
 
+
+### Features
+- uses RotorFlight EthOS suite to get model name from the flight controller
+- allows single Tx model to be used for multiple helis
+
+
+# Custom Layouts
+- Heli main screen (no trims)
+- Airplane main screen (with trims)
+- 12 cell summary screen
+![image](https://github.com/user-attachments/assets/63b4e708-538d-4832-a148-6e32e89a688c)
+![image](https://github.com/user-attachments/assets/b49d8fe4-b634-454b-8050-9f6127f3a36f)
+![image](https://github.com/user-attachments/assets/113d04a2-3c4f-42c4-bd4d-61b1ea817d27)
+
+  
 
 # Installation
 - download eth-widgets-main.zip (don't unzip it)
