@@ -62,7 +62,7 @@ The goal is to present the relevant telemetry expected from modern R/C systems b
 # Custom Layouts
 - Heli main screen (no trims)
 - Airplane main screen (with trims)
-- 12 cell summary screen
+- 12 cell summary screen<br>
 ![image](https://github.com/user-attachments/assets/63b4e708-538d-4832-a148-6e32e89a688c)
 ![image](https://github.com/user-attachments/assets/b49d8fe4-b634-454b-8050-9f6127f3a36f)
 ![image](https://github.com/user-attachments/assets/113d04a2-3c4f-42c4-bd4d-61b1ea817d27)
