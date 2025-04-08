@@ -1,13 +1,27 @@
 [![GitHub license](https://img.shields.io/github/license/bob01/etxwidgets)](https://github.com/bob01/etxwidgets/main/LICENSE)
 
 
-# Welcome to ethWidgets for FrSky EthOS
+# Welcome to ethWidgets for FrSky ETHOS
 **Screen elements for R/C Helicopters (RotorFlight v2.1+) and Airplanes**
 
 
 ### About etxWidgets
 These widgets and custom layouts have been designed by R/C pilots for R/C pilots.
-The goal is to present the relevant telemetry expected from modern R/C systems before, during and after flight with on-screen, audio and haptic elements.
+The goal is to present the relevant telemetry expected from modern R/C systems before, during and after flight with on-screen, audio and haptic elements.<br>
+These layouts and widgets can be used to build screens like these.
+Model files will be included in the near future - decided to share now due to several requests for the ePowerbar widget for ETHOS
+
+Helicopter without trims + ESC / govenor status<br>
+![image](https://github.com/user-attachments/assets/eb71ebbd-2f91-4f79-ba94-80c9d7a3831f)<br>
+Airplane with trims + FrSky stabilizer status<br>
+![image](https://github.com/user-attachments/assets/e4992cfd-0e16-4558-8a41-9b924102297b)<br>
+Summary screen<br>
+![image](https://github.com/user-attachments/assets/799cb8b8-97e2-4b6d-9030-60f81d628cdd)<br>
+
+### Requirements
+- ETHOS 1.6.2 or later (https://ethos.frsky-rc.com/)
+- RotorFlight 2.1 or later (https://github.com/rotorflight)
+- Rotorflight Lua Suite for Ethos (https://github.com/rotorflight/rotorflight-lua-ethos-suite)
 
 ### Release notes
 - 2025.02.06 - initial release
@@ -37,7 +51,7 @@ The goal is to present the relevant telemetry expected from modern R/C systems b
 # eGovernor
 ![image](https://github.com/user-attachments/assets/eb71ebbd-2f91-4f79-ba94-80c9d7a3831f)
 ![image](https://github.com/user-attachments/assets/681b1763-7c65-4119-8b77-e6772a0fcb84)
-![image](https://github.com/user-attachments/assets/03e902d5-5368-4051-b88f-2e2f649c267f)
+![image](https://github.com/user-attachments/assets/1abd754f-ff99-4272-9896-a17f48fc1b19)
 
 
 ### Features
