@@ -27,11 +27,10 @@ Summary screen<br>
 - 2025.02.06 - initial release
 
 
-# ePowerbar
+# ePowerbar widget
 ![image](https://github.com/user-attachments/assets/2437e345-9da1-4442-8c6f-a43d43875b52)
 ![image](https://github.com/user-attachments/assets/8b0a8df8-78a5-44d7-9ad7-09afc15e5b53)
 ![image](https://github.com/user-attachments/assets/30124be1-ad9e-4462-bdab-246ac1048a00)
-
 
 ### Features
 - does voice callouts every 10% w/ 1% callouts for the last 10
@@ -48,11 +47,10 @@ Summary screen<br>
 ![image](https://github.com/user-attachments/assets/121a3d93-cb42-4230-8326-8ad5099abb5b)
 
 
-# eGovernor
+# eGovernor widget
 ![image](https://github.com/user-attachments/assets/eb71ebbd-2f91-4f79-ba94-80c9d7a3831f)
 ![image](https://github.com/user-attachments/assets/681b1763-7c65-4119-8b77-e6772a0fcb84)
 ![image](https://github.com/user-attachments/assets/1abd754f-ff99-4272-9896-a17f48fc1b19)
-
 
 ### Features
 - uses RotorFlight's (FC) flight mode telemetry sensor to indicate the actual true "safe" / "armed" state of the flight controller w/ voice callout
@@ -64,9 +62,9 @@ Summary screen<br>
 ![image](https://github.com/user-attachments/assets/aa46cb99-8f5a-4300-9fed-29326d6ebf50)
 ![image](https://github.com/user-attachments/assets/473fba76-081d-47e1-aee5-3572a42d8137)
 
-# eBitmap
-![image](https://github.com/user-attachments/assets/591fb44e-7c38-45f7-9086-a0515c5b5111)
 
+# eBitmap widget
+![image](https://github.com/user-attachments/assets/591fb44e-7c38-45f7-9086-a0515c5b5111)
 
 ### Features
 - uses RotorFlight EthOS suite to get model name from the flight controller
@@ -88,6 +86,3 @@ Summary screen<br>
 - use ethos suite v1.6 or above to install as shown below
   ![image](https://github.com/user-attachments/assets/3218e57c-b803-432c-a4ff-1b7081294873)
   ![image](https://github.com/user-attachments/assets/150c09bd-4d1f-4feb-b1b7-89d0c60a7bc6)
-
-
-
