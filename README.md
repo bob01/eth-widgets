@@ -9,7 +9,7 @@
 These widgets and custom layouts have been designed by R/C pilots for R/C pilots.
 The goal is to present the relevant telemetry expected from modern R/C systems before, during and after flight with on-screen, audio and haptic elements.<br>
 The included layouts and widgets can be used to build screens like these.<br>
-Model files will be included in the near future - decided to share now due to several requests for the ePowerbar widget for ETHOS
+Model files will be included in the near future - been getting requests for the ePowerbar widget for ETHOS so here it is for now.
 
 Helicopter without trims + ESC / govenor status<br>
 ![image](https://github.com/user-attachments/assets/eb71ebbd-2f91-4f79-ba94-80c9d7a3831f)<br>
