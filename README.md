@@ -1,7 +1,7 @@
 [![GitHub license](https://img.shields.io/github/license/bob01/etxwidgets)](https://github.com/bob01/etxwidgets/main/LICENSE)
 
 
-# Welcome to ethWidgets for FrSky ETHOS
+# Welcome to ethWidgets for ETHOS
 **Screen elements for R/C Helicopters (RotorFlight v2.1+) and Airplanes**
 
 
