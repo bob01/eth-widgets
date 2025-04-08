@@ -54,9 +54,9 @@ Summary screen<br>
 
 ### Features
 - uses RotorFlight's (FC) flight mode telemetry sensor to indicate the actual true "safe" / "armed" state of the flight controller w/ voice callout
-- displays the FC's flight mode telemetry sensor to help tell what's happening if you're standing there and FC won't arm
-- displays ESC last most significant status + log of last 128 messages in full screen mode, purpose is to help understand unexpected powerloss etc at the flightline or pits w/o a laptop
-- can be used with airplanes (displays FrSky SR stabilizer status)
+- displays the FC's flight mode telemetry sensor - displays armed state, reasons why FC won't arm, govenor state etc
+- displays ESC last most significant status (info, warning, error) to help understand/prevent unexpected shutdowns etc at the field w/o a laptop
+- can be used with airplanes (displays FrSky SR stabilizer status - gain and mode) - preview
 
 ### Settings
 ![image](https://github.com/user-attachments/assets/aa46cb99-8f5a-4300-9fed-29326d6ebf50)
@@ -67,7 +67,7 @@ Summary screen<br>
 ![image](https://github.com/user-attachments/assets/591fb44e-7c38-45f7-9086-a0515c5b5111)
 
 ### Features
-- uses RotorFlight EthOS suite to get model name from the flight controller
+- uses RotorFlight ETHOS suite (required) to get model name from the flight controller
 - allows single Tx model to be used for multiple helis
 
 
