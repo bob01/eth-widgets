@@ -1,7 +1,7 @@
 --[[
 #########################################################################
 #                                                                       #
-# Powerbar widget for FrSky Ethos                                       #
+# Powerbar widget for FrSky ETHOS                                       #
 # Copyright "Rob 'bob00' Gayle"                                         #
 #                                                                       #
 # License GPLv3: http://www.gnu.org/licenses/gpl-3.0.html               #
@@ -19,10 +19,10 @@
 ]]
 -- Author: Rob Gayle (bob00@rogers.com)
 -- Date: 2024, 2025
-local version = "v1.0.1"
+local version = "v1.0.2"
 
 -- metadata
-local widgetDir = "/scripts/widget-epowerbar/"
+local widgetDir = "/scripts/ethwidgets/"
 
 local translations = { en="ePowerbar" }
 
@@ -275,7 +275,8 @@ local function crankVoltageAlerts(widget)
                 system.playFile(widgetDir .. "sounds/" .. locale .. "/batcrt.wav")
                 haptic = true
             end
-            -- report total voltage until https://github.com/FrSkyRC/ETHOS-Feedback-Community/issues/4708 addressed
+            -- report total voltage until https://github.com/FrSkyRC/ETHOS-Feedback-Community/issues/3491
+            -- (was https://github.com/FrSkyRC/ETHOS-Feedback-Community/issues/4708)
             -- system.playNumber(cellv / prec, UNIT_VOLT, 2)
             system.playNumber(widget.volts, UNIT_VOLT, 1)
 

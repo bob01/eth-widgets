@@ -1,7 +1,7 @@
 --[[
 #########################################################################
 #                                                                       #
-# Powerbar widget for FrSky Ethos                                       #
+# Powerbar widget for FrSky ETHOS                                       #
 # Copyright "Rob 'bob00' Gayle"                                         #
 #                                                                       #
 # License GPLv3: http://www.gnu.org/licenses/gpl-3.0.html               #
@@ -19,10 +19,10 @@
 ]]
 -- Author: Rob Gayle (bob00@rogers.com)
 -- Date: 2025
-local version = "v0.8.1"
+local version = "v1.0.2"
 
 -- metadata
-local widgetDir = "/scripts/widget-egovernor/"
+local widgetDir = "/scripts/ethwidgets/"
 
 local translations = { en="eGovernor" }
 

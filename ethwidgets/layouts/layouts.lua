@@ -1,7 +1,7 @@
 --[[
 #########################################################################
 #                                                                       #
-# Powerbar widget for FrSky Ethos                                       #
+# Powerbar widget for FrSky ETHOS                                       #
 # Copyright "Rob 'bob00' Gayle"                                         #
 #                                                                       #
 # License GPLv3: http://www.gnu.org/licenses/gpl-3.0.html               #
