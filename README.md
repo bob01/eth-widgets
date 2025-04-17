@@ -82,7 +82,8 @@ Summary screen<br>
   
 
 # Installation
-- download eth-widgets-main.zip (don't unzip it)
+- download the lastest ethwidgets-x.x.x.zip (don't unzip it)
 - use ethos suite v1.6 or above to install as shown below
-  ![image](https://github.com/user-attachments/assets/3218e57c-b803-432c-a4ff-1b7081294873)
-  ![image](https://github.com/user-attachments/assets/150c09bd-4d1f-4feb-b1b7-89d0c60a7bc6)
+  ![image](https://github.com/user-attachments/assets/4cfe5fd0-31ba-4e1e-a99d-0aa8a3a586d9)
+  ![image](https://github.com/user-attachments/assets/286529d9-66e3-4e4a-bddf-711235a44eed)
+  ![image](https://github.com/user-attachments/assets/df9e7f43-d1e2-4067-b1a3-2ff4eca6b839)
