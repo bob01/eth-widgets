@@ -19,7 +19,7 @@
 ]]
 -- Author: Rob Gayle (bob00@rogers.com)
 -- Date: 2025
-local version = "v1.0.2"
+local version = "v1.0.3"
 
 -- metadata
 local widgetDir = "/scripts/ethwidgets/"
@@ -568,7 +568,7 @@ local armDisabledDescs = {
     "BADRX",
     "BOXFAILSAFE",
     "RUNAWAY",
-    "CRASH",
+    "RPM_SIG",
     "THROTTLE",
     "ANGLE",
     "BOOTGRACE",
