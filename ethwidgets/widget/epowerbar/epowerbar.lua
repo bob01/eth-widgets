@@ -19,7 +19,7 @@
 ]]
 -- Author: Rob Gayle (bob00@rogers.com)
 -- Date: 2024, 2025
-local version = "v1.0.2"
+local version = nil
 
 -- metadata
 local widgetDir = "/scripts/ethwidgets/"
@@ -550,7 +550,10 @@ end
 
 
 -- initialize / register widget
-local function init()
+local function init(ver)
+    -- save global version
+    version = ver
+
     system.registerWidget({ key = "rngbar0", name = name, create = create, paint = paint, wakeup = wakeup, configure = configure, read = read, write = write, title = false })
 end
 

@@ -19,9 +19,9 @@
 ]]
 -- Author: Rob Gayle (bob00@rogers.com)
 -- Date: 2025
-local version = "v0.2.8"
+local version = nil
 
-local function init()
+local function init(ver)
     -- extents
     local sx = 0
     local sy
@@ -31,6 +31,9 @@ local function init()
     local trimx
     local trimy
     local trimw
+
+    -- save global version
+    version = ver
 
     -- get screen size
     local version = system.getVersion()

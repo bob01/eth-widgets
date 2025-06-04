@@ -21,24 +21,24 @@
 -- Date: 2024, 2025
 
 -- Collection of layouts and widgets for the ETHOS operating system
-local version = "v1.0.2"
+local version = "v1.0.3"
 
 
 -- initialize / register layouts and widgets
 local function init()
     -- layouts
     local layouts = assert(loadfile("layouts/layouts.lua"))()
-    layouts.init()
+    layouts.init(version)
 
     -- widgets
     local ebitmap = assert(loadfile("widget/ebitmap/ebitmap.lua"))()
-    ebitmap.init()
+    ebitmap.init(version)
 
     local egovernor = assert(loadfile("widget/egovernor/egovernor.lua"))()
-    egovernor.init()
+    egovernor.init(version)
 
     local epowerbar = assert(loadfile("widget/epowerbar/epowerbar.lua"))()
-    epowerbar.init()
+    epowerbar.init(version)
 end
 
 return { init = init }
