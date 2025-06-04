@@ -2,7 +2,7 @@
 
 
 # Welcome to ethWidgets for ETHOS
-**Screen elements for R/C Helicopters (RotorFlight v2.1+) and Airplanes**
+**Screen elements for R/C Helicopters (RotorFlight v2.2+) and Airplanes**
 
 
 ### About etxWidgets
@@ -24,7 +24,7 @@ Summary screen<br>
 - Rotorflight Lua Suite for Ethos (https://github.com/rotorflight/rotorflight-lua-ethos-suite)
 
 ### Release notes
-- 2025.06.04 - eGovernor updated for RF 4.5.x flag ARMING_DISABLED_RPM_SIGNAL
+- 2025.06.04 - v1.0.3 - updates for RotorFlight 2.2.x
 - 2025.02.06 - initial release
 
 
