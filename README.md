@@ -1,11 +1,11 @@
 [![GitHub license](https://img.shields.io/github/license/bob01/etxwidgets)](https://github.com/bob01/etxwidgets/main/LICENSE)
 
 
-# Welcome to ethWidgets for ETHOS
+# Welcome to eth-widgets for ETHOS
 **Screen elements for R/C Helicopters (RotorFlight v2.2+) and Airplanes**
 
 
-### About etxWidgets
+### About eth-widgets
 These widgets and custom layouts have been designed by R/C pilots for R/C pilots.
 The goal is to present the relevant telemetry expected from modern R/C systems before, during and after flight with on-screen, audio and haptic elements.<br>
 The included layouts and widgets can be used to build screens like these.<br>
