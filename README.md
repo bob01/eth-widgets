@@ -12,9 +12,9 @@ The included layouts and widgets can be used to build screens like these.<br>
 Model files will be included in the near future - been getting requests for the ePowerbar widget for ETHOS so here it is for now.
 
 Helicopter without trims + ESC / govenor status<br>
-![image](https://github.com/user-attachments/assets/eb71ebbd-2f91-4f79-ba94-80c9d7a3831f)<br>
+![image](https://github.com/user-attachments/assets/a4e75a19-f6ef-4d7a-89b2-4faea78944d9)<br>
 Airplane with trims + FrSky stabilizer status<br>
-![image](https://github.com/user-attachments/assets/e4992cfd-0e16-4558-8a41-9b924102297b)<br>
+![image](https://github.com/user-attachments/assets/cf094ddd-0307-42f7-83fb-123e5f167f75)<br>
 Summary screen<br>
 ![image](https://github.com/user-attachments/assets/799cb8b8-97e2-4b6d-9030-60f81d628cdd)<br>
 
