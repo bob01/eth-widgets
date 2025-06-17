@@ -74,7 +74,7 @@ local function create()
         nextCapa = 0,
         mute = false,
         haptic = true,
-        sparseLowCapaReport = false,
+        calmLowCapaAlert = false,
 
         -- thresholds
         reserve = 20,
@@ -200,7 +200,7 @@ local function crankFuelCalls(widget)
     local capa
     if widget.fuel > critical + widget.low then
         capa = math.ceil(widget.fuel / 10) * 10
-    elseif widget.sparseLowCapaReport then
+    elseif widget.calmLowCapaAlert then
         capa = math.ceil(widget.fuel / 5) * 5
     else
         capa = math.ceil(widget.fuel)
@@ -466,7 +466,7 @@ local function configure(widget)
 
     -- sparse low capacity alerts
     line = form.addLine("Calm (5%) low capacity alerts")
-    field = form.addBooleanField(line, nil, function() return widget.sparseLowCapaReport end, function(newValue) widget.sparseLowCapaReport = newValue end)
+    field = form.addBooleanField(line, nil, function() return widget.calmLowCapaAlert end, function(newValue) widget.calmLowCapaAlert = newValue end)
 
     -- haptic
     line = form.addLine("Vibrate on critical alerts")
@@ -537,10 +537,10 @@ local function read(widget)
     -- v2
     if version >= 2 then
         widget.cellFull = storage.read("cellFull")
-        widget.sparseLowCapaReport = storage.read("sparseLowCapaReport")
+        widget.calmLowCapaAlert = storage.read("calmLowCapaAlert")
     else
         widget.cellFull = 4.16        -- default to lipo
-        widget.sparseLowCapaReport = false
+        widget.calmLowCapaAlert = false
     end
 
 end
@@ -569,7 +569,7 @@ local function write(widget)
 
     -- v2
     storage.write("cellFull", widget.cellFull)
-    storage.write("sparseLowCapaReport", widget.sparseLowCapaReport)
+    storage.write("calmLowCapaAlert", widget.calmLowCapaAlert)
 end
 
 
