@@ -74,10 +74,14 @@ local function create()
         nextCapa = 0,
         mute = false,
         haptic = true,
+        sparseLowCapaReport = false,
 
-        --thresholds
+        -- thresholds
         reserve = 20,
         low = 10,
+
+        -- initial voltage check
+        cellFull = 4.16,
 
         -- alerts
         alertActiveCondition = system.getSource(CATEGORY_ALWAYS_ON),
@@ -196,6 +200,8 @@ local function crankFuelCalls(widget)
     local capa
     if widget.fuel > critical + widget.low then
         capa = math.ceil(widget.fuel / 10) * 10
+    elseif widget.sparseLowCapaReport then
+        capa = math.ceil(widget.fuel / 5) * 5
     else
         capa = math.ceil(widget.fuel)
     end
@@ -458,6 +464,10 @@ local function configure(widget)
     line = form.addLine("Mute (voice and vibration)")
     field = form.addBooleanField(line, nil, function() return widget.mute end, function(newValue) widget.mute = newValue end)
 
+    -- sparse low capacity alerts
+    line = form.addLine("Calm (5%) low capacity alerts")
+    field = form.addBooleanField(line, nil, function() return widget.sparseLowCapaReport end, function(newValue) widget.sparseLowCapaReport = newValue end)
+
     -- haptic
     line = form.addLine("Vibrate on critical alerts")
     field = form.addBooleanField(line, nil, function() return widget.haptic end, function(newValue) widget.haptic = newValue end)
@@ -523,12 +533,22 @@ local function read(widget)
     widget.alertRepeatInterval = storage.read("alertRepeatInterval")
     widget.haptic = storage.read("haptic")
     widget.mute = storage.read("mute")
+
+    -- v2
+    if version >= 2 then
+        widget.cellFull = storage.read("cellFull")
+        widget.sparseLowCapaReport = storage.read("sparseLowCapaReport")
+    else
+        widget.cellFull = 4.16        -- default to lipo
+        widget.sparseLowCapaReport = false
+    end
+
 end
 
 
 -- save config
 local function write(widget)
-    storage.write("version", 1)
+    storage.write("version", 2)
 
     storage.write("voltageSensor", widget.voltageSensor)
     storage.write("mahSensor", widget.mahSensor)
@@ -546,6 +566,10 @@ local function write(widget)
     storage.write("alertRepeatInterval", widget.alertRepeatInterval)
     storage.write("haptic", widget.haptic)
     storage.write("mute", widget.mute)
+
+    -- v2
+    storage.write("cellFull", widget.cellFull)
+    storage.write("sparseLowCapaReport", widget.sparseLowCapaReport)
 end
 
 
