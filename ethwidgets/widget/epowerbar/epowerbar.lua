@@ -113,7 +113,7 @@ local function getBarColor(widget)
     if widget.fuel <= critical then
         -- red
         return lcd.RGB(0xff, 0, 0)
-    elseif widget.fuel <= critical + 20 then
+    elseif widget.fuel <= critical + widget.low then
         -- yellow
         return lcd.RGB(0xff, 0xff, 0)
     else
