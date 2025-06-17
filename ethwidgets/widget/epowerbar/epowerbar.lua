@@ -37,6 +37,9 @@ local ALERTLEVEL_NONE       = 0
 local ALERTLEVEL_LOW        = 1
 local ALERTLEVEL_CRITICAL   = 2
 
+local CELLCHECK_OK          = lcd.RGB(0x00, 0xff, 0x00)
+local CELLCHECK_WARN        = lcd.RGB(0xff, 0xff, 0)  -- or orange lcd.RGB(0xf8, 0xc0, 0x00)
+
 
 -- ctor
 local function create()
@@ -82,6 +85,9 @@ local function create()
 
         -- initial voltage check
         cellFull = 4.16,
+        cellCheckPending = false,
+        cellCheckDelay = 10000,
+        cellCheckColor = CELLCHECK_OK,
 
         -- alerts
         alertActiveCondition = system.getSource(CATEGORY_ALWAYS_ON),
@@ -118,7 +124,7 @@ local function getBarColor(widget)
         return lcd.RGB(0xff, 0xff, 0)
     else
         -- green
-        return lcd.RGB(0, 0xff, 0)
+        return widget.cellCheckColor
     end
 end
 
@@ -315,17 +321,19 @@ end
 
 -- process sensors, pre-render and announce
 local function wakeup(widget)
-    -- nil CATEGORY_NONE sensors
-    -- widget.voltageSensor    = nilNoneSource(widget.voltageSensor)
-    -- widget.cellsSensor      = nilNoneSource(widget.cellsSensor)
-    -- widget.mahSensor        = nilNoneSource(widget.mahSensor)
-    -- widget.fuelSensor       = nilNoneSource(widget.fuelSensor)
-
     -- telemetry active?
     local active = widget.voltageSensor and widget.voltageSensor:state()
     if widget.active ~= active then
         widget.active = active
+
+        -- set text color
         widget.textColor = active and BLACK or lcd.GREY(0x7F)
+
+        if active then
+            -- reset bar color
+            widget.cellCheckColor = CELLCHECK_OK
+        end
+
         lcd.invalidate()
     end
 
@@ -448,14 +456,21 @@ local function configure(widget)
     field:enable(widget.cellsSensor == nil)
     widget.cellsField = field
 
+    -- Expected full voltage
+    line = form.addLine("Full cell voltage (v)")
+    field = form.addNumberField(line, nil, 0, 460, function() return widget.cellFull end, function(value) widget.cellFull = value end)
+    field:suffix("v")
+    field:default(345)
+    field:decimals(2)
+
     -- Reserve
-    line = form.addLine("LiPo reserve capacity (%)")
+    line = form.addLine("Reserve capacity (%)")
     field = form.addNumberField(line, nil, 0, 40, function() return widget.reserve end, function(value) widget.reserve = value end)
     field:suffix("%")
     field:default(20)
 
     -- Low threshold
-    line = form.addLine("Lipo low alert (%)")
+    line = form.addLine("Low capacity alert (%)")
     field = form.addNumberField(line, nil, 0, 30, function() return widget.low end, function(value) widget.low = value end)
     field:suffix("%")
     field:default(10)
