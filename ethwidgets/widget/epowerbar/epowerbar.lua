@@ -37,8 +37,12 @@ local ALERTLEVEL_NONE       = 0
 local ALERTLEVEL_LOW        = 1
 local ALERTLEVEL_CRITICAL   = 2
 
-local CELLCHECK_OK          = lcd.RGB(0x00, 0xff, 0x00)
-local CELLCHECK_WARN        = lcd.RGB(0xff, 0xff, 0)  -- or orange lcd.RGB(0xf8, 0xc0, 0x00)
+local BAR_COLOR_OK          = lcd.RGB(0x00, 0xff, 0x00)
+local BAR_COLOR_WARN        = lcd.RGB(0xf8, 0xc0, 0x00) -- lcd.RGB(0xff, 0xff, 0)
+local BAR_COLOR_LOW         = lcd.RGB(0xff, 0xff, 0x00)
+local BAR_COLOR_CRITICAL    = lcd.RGB(0xff, 0x00, 0x00)
+local BAR_COLOR_CHECK       = lcd.RGB(0xb8, 0xb8, 0xb8)
+local BAR_COLOR_BACKGROUND  = lcd.RGB(0xc8, 0xc8, 0xc8)
 
 
 -- ctor
@@ -84,10 +88,10 @@ local function create()
         low = 10,
 
         -- initial voltage check
-        cellFull = 4.16,
-        cellCheckPending = false,
-        cellCheckDelay = 10000,
-        cellCheckColor = CELLCHECK_OK,
+        cellFull = 416,
+        cellCheckTime = nil,
+        cellCheckDelay = 8000,
+        cellCheckColor = BAR_COLOR_OK,
 
         -- alerts
         alertActiveCondition = system.getSource(CATEGORY_ALWAYS_ON),
@@ -116,12 +120,15 @@ end
 -- color for bar
 local function getBarColor(widget)
     local critical = widget:getCritical()
-    if widget.fuel <= critical then
+    if widget.cellCheckTime ~= nil then
+        -- in cell check
+        return BAR_COLOR_CHECK
+    elseif widget.fuel <= critical then
         -- red
-        return lcd.RGB(0xff, 0, 0)
+        return BAR_COLOR_CRITICAL
     elseif widget.fuel <= critical + widget.low then
         -- yellow
-        return lcd.RGB(0xff, 0xff, 0)
+        return BAR_COLOR_LOW
     else
         -- green
         return widget.cellCheckColor
@@ -137,7 +144,7 @@ local function paint(widget)
     local box_left, box_width = 0, w
 
     -- background
-    lcd.color(lcd.RGB(200, 200, 200))
+    lcd.color(BAR_COLOR_BACKGROUND)
     lcd.drawFilledRectangle(box_left, box_top, box_width, box_height)
 
     -- bar
@@ -311,6 +318,44 @@ local function crankVoltageAlerts(widget)
 end
 
 
+-- full cell checks
+local function crankFullChellCheck(widget)
+    -- bail if not armed
+    if widget.cellCheckTime == nil then
+        return
+    end
+
+    -- bail, reset if not active or no voltage value
+    if not widget.active or widget.volts == nil or widget.volts == 0 then
+        widget.cellCheckTime = nil
+        return
+    end
+
+    -- bail if in delay
+    local now = getSysTime()
+    if now < widget.cellCheckTime then
+        return
+    end
+    widget.cellCheckTime = nil
+
+    -- check initial cell state
+    -- we will be working w/ per cell voltage (x100 for 2 place decimal prec)
+    local prec = 100
+    local cellv = widget.volts / widget.cells
+    cellv = math.floor(cellv * prec)
+    if cellv > widget.cellFull then
+        -- ok
+        widget.cellCheckColor = BAR_COLOR_OK
+    else
+        -- warn
+        local locale = "en"
+        system.playFile(widgetDir .. "sounds/" .. locale .. "/batlow.wav")
+        widget.cellCheckColor = BAR_COLOR_WARN
+    end
+    lcd.invalidate()
+end
+
+
 local function nilNoneSource(source)
     if source and source:category() == CATEGORY_NONE then
         return nil
@@ -331,7 +376,7 @@ local function wakeup(widget)
 
         if active then
             -- reset bar color
-            widget.cellCheckColor = CELLCHECK_OK
+            widget.cellCheckColor = BAR_COLOR_OK
         end
 
         lcd.invalidate()
@@ -356,6 +401,11 @@ local function wakeup(widget)
     -- voltage
     local volts = widget.active and widget.cells and widget.cells > 0 and widget.voltageSensor and widget.voltageSensor:value() or nil
     if volts and widget.volts ~= volts then
+        -- arm cell check
+        if volts > 0 and (widget.volts == nil or widget.volts == 0) then
+            widget.cellCheckTime = getSysTime() + widget.cellCheckDelay
+        end
+
         widget.volts = volts
         widget.textVolts = (widget.minimal and string.format("%.2fv", volts / widget.cells) or string.format("%.1fv / %.2fv (%.0fs)", volts, volts / widget.cells, widget.cells)) or nil
         lcd.invalidate()
@@ -399,6 +449,8 @@ local function wakeup(widget)
         crankFuelCalls(widget)
         crankVoltageAlerts(widget)
     end
+
+    crankFullChellCheck(widget)
 end
 
 
@@ -456,13 +508,6 @@ local function configure(widget)
     field:enable(widget.cellsSensor == nil)
     widget.cellsField = field
 
-    -- Expected full voltage
-    line = form.addLine("Full cell voltage (v)")
-    field = form.addNumberField(line, nil, 0, 460, function() return widget.cellFull end, function(value) widget.cellFull = value end)
-    field:suffix("v")
-    field:default(345)
-    field:decimals(2)
-
     -- Reserve
     line = form.addLine("Reserve capacity (%)")
     field = form.addNumberField(line, nil, 0, 40, function() return widget.reserve end, function(value) widget.reserve = value end)
@@ -497,6 +542,12 @@ local function configure(widget)
 
     line = panel:addLine("Active condition")
     form.addSourceField(line, nil, function() return widget.alertActiveCondition end, function(value) widget.alertActiveCondition = nilNoneSource(value) end)
+
+    line = panel:addLine("Full cell voltage (v)")
+    field = form.addNumberField(line, nil, 0, 480, function() return widget.cellFull end, function(value) widget.cellFull = value end)
+    field:suffix("v")
+    field:default(416)
+    field:decimals(2)
 
     line = panel:addLine("Low cell voltage (v)")
     field = form.addNumberField(line, nil, 0, 440, function() return widget.alertCellLow end, function(value) widget.alertCellLow = value end)
@@ -554,7 +605,7 @@ local function read(widget)
         widget.cellFull = storage.read("cellFull")
         widget.calmLowCapaAlert = storage.read("calmLowCapaAlert")
     else
-        widget.cellFull = 4.16        -- default to lipo
+        widget.cellFull = 416       -- default to lipo
         widget.calmLowCapaAlert = false
     end
 
