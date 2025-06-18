@@ -404,15 +404,15 @@ local function wakeup(widget)
         
         -- force volts / textVolts recalc
         widget.volts = nil
-        
+
         lcd.invalidate()
     end
 
     -- voltage
     local volts = widget.active and widget.cells and widget.cells > 0 and widget.voltageSensor and widget.voltageSensor:value() or nil
     if volts and widget.volts ~= volts then
-        -- arm cell check if voltage appearing or moving away from 0
-        if volts > 0 and (widget.volts == nil or widget.volts == 0) then
+        -- arm cell check if full check enabled and voltage appearing or moving away from 0
+        if widget.cellFull > 0 and volts > 0 and (widget.volts == nil or widget.volts == 0) then
             widget.cellCheckTime = getSysTime() + widget.cellCheckDelay
         end
 
