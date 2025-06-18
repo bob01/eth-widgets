@@ -90,10 +90,10 @@ local function create()
 
         -- initial voltage check
         cellFull = 416,
-        cellCheckTime = nil,
-        cellCheckDelay = 8000,
-        cellReCheckDelay = 10000,
-        cellCheckColor = BAR_COLOR_OK,
+        cellFullCheckTime = nil,
+        cellFullCheckDelay = 8000,
+        cellFullReCheckDelay = 10000,
+        cellFullCheckColor = BAR_COLOR_OK,
 
         -- alerts
         alertActiveCondition = system.getSource(CATEGORY_ALWAYS_ON),
@@ -122,7 +122,7 @@ end
 -- color for bar
 local function getBarColor(widget)
     local critical = widget:getCritical()
-    if widget.cellCheckTime ~= nil then
+    if widget.cellFullCheckTime ~= nil then
         -- in cell check
         return BAR_COLOR_CHECK
     elseif widget.fuel <= critical then
@@ -133,7 +133,7 @@ local function getBarColor(widget)
         return BAR_COLOR_LOW
     else
         -- green
-        return widget.cellCheckColor
+        return widget.cellFullCheckColor
     end
 end
 
@@ -321,24 +321,24 @@ end
 
 
 -- full cell checks
-local function crankFullChellCheck(widget)
+local function crankCellFullCheck(widget)
     -- bail if not armed
-    if widget.cellCheckTime == nil then
+    if widget.cellFullCheckTime == nil then
         return
     end
 
     -- bail, reset if not active or no voltage value
     if not widget.active or widget.volts == nil or widget.volts == 0 then
-        widget.cellCheckTime = nil
+        widget.cellFullCheckTime = nil
         return
     end
 
     -- bail if in delay
     local now = getSysTime()
-    if now < widget.cellCheckTime then
+    if now < widget.cellFullCheckTime then
         return
     end
-    widget.cellCheckTime = nil
+    widget.cellFullCheckTime = nil
 
     -- check initial cell state
     -- we will be working w/ per cell voltage (x100 for 2 place decimal prec)
@@ -347,12 +347,12 @@ local function crankFullChellCheck(widget)
     cellv = math.floor(cellv * prec)
     if cellv > widget.cellFull then
         -- ok
-        widget.cellCheckColor = BAR_COLOR_OK
+        widget.cellFullCheckColor = BAR_COLOR_OK
     else
         -- warn
         local locale = "en"
         system.playFile(widgetDir .. "sounds/" .. locale .. "/batlow.wav")
-        widget.cellCheckColor = BAR_COLOR_WARN
+        widget.cellFullCheckColor = BAR_COLOR_WARN
     end
     lcd.invalidate()
 end
@@ -378,8 +378,9 @@ local function wakeup(widget)
 
         local now = getSysTime()
         if active then
-            -- force cellcheck if inactive for greater than cellReCheckDelay
-            if now > widget.inactiveAt + widget.cellReCheckDelay then
+            -- force cellcheck if inactive for greater than cellFullReCheckDelay
+            if now > widget.inactiveAt + widget.cellFullReCheckDelay then
+                widget.cellFullCheckColor = BAR_COLOR_OK
                 widget.volts = nil
             end
         else
@@ -413,7 +414,7 @@ local function wakeup(widget)
     if volts and widget.volts ~= volts then
         -- arm cell check if full check enabled and voltage appearing or moving away from 0
         if widget.cellFull > 0 and volts > 0 and (widget.volts == nil or widget.volts == 0) then
-            widget.cellCheckTime = getSysTime() + widget.cellCheckDelay
+            widget.cellFullCheckTime = getSysTime() + widget.cellFullCheckDelay
         end
 
         widget.volts = volts
@@ -461,7 +462,7 @@ local function wakeup(widget)
     end
 
     -- initial full cell check is never skipped/muted
-    crankFullChellCheck(widget)
+    crankCellFullCheck(widget)
 end
 
 
