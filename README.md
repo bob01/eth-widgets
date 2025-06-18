@@ -30,17 +30,20 @@ Summary screen<br>
 
 # ePowerbar widget
 ![image](https://github.com/user-attachments/assets/2437e345-9da1-4442-8c6f-a43d43875b52)
-![image](https://github.com/user-attachments/assets/8b0a8df8-78a5-44d7-9ad7-09afc15e5b53)
+![image](https://github.com/user-attachments/assets/4c5aaa3b-3ba9-4e2e-a45b-b61b04e63e4f)
 ![image](https://github.com/user-attachments/assets/30124be1-ad9e-4462-bdab-246ac1048a00)
+![image](https://github.com/user-attachments/assets/8e4a2b0d-acaa-4d7a-9f64-0b28eeff24f4)
 
 ### Features
-- does voice callouts every 10% w/ 1% callouts for the last 10
+- does voice callouts every 10% or 1% callouts if below low capacity threshold (default is 10%)
+- final capacity alerts can be relaxed to every 5% if distracting
 - use 'Battery %' or 'Fuel' telemetry sensor from flightcontroller where available or set capacity explicity
 - use cell count telemetry sensor from flight controller where available or set explicitly
 - changes color to yellow at 30% and red for the last 20% or...
 - allows specification of a "reserve" %. In that case pilot flys to 0, bar goes red if pilot chooses to go further
 - critial alerts will be accompanied by a haptic vibe
 - voltage alerts when cell voltages below low or critical thresholds can be always on or based on a condition
+- low voltage alert a few seconds (8s) after a new pack is connected if it is not fully charged, bar will be orange in this condition meaning proceed with caution
 
 ### Settings
 ![image](https://github.com/user-attachments/assets/2f49aa7b-116e-4d1e-ad78-8a28c4bd4f5f)
