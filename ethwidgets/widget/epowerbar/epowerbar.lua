@@ -69,6 +69,7 @@ local function create()
         cells = nil,
 
         active = false,
+        inactiveAt = 0,
         textColor = BLACK,
 
         -- pre-rendered text
@@ -91,6 +92,7 @@ local function create()
         cellFull = 416,
         cellCheckTime = nil,
         cellCheckDelay = 8000,
+        cellReCheckDelay = 10000,
         cellCheckColor = BAR_COLOR_OK,
 
         -- alerts
@@ -374,9 +376,15 @@ local function wakeup(widget)
         -- set text color
         widget.textColor = active and BLACK or lcd.GREY(0x7F)
 
+        local now = getSysTime()
         if active then
-            -- reset bar color
-            widget.cellCheckColor = BAR_COLOR_OK
+            -- force cellcheck if inactive for greater than cellReCheckDelay
+            if now > widget.inactiveAt + widget.cellReCheckDelay then
+                widget.volts = nil
+            end
+        else
+            -- mark start of inactive time
+            widget.inactiveAt = now
         end
 
         lcd.invalidate()
@@ -393,15 +401,17 @@ local function wakeup(widget)
     end
     if cells and widget.cells ~= cells then
         widget.cells = cells
-        lcd.invalidate()
+        
         -- force volts / textVolts recalc
         widget.volts = nil
+        
+        lcd.invalidate()
     end
 
     -- voltage
     local volts = widget.active and widget.cells and widget.cells > 0 and widget.voltageSensor and widget.voltageSensor:value() or nil
     if volts and widget.volts ~= volts then
-        -- arm cell check
+        -- arm cell check if voltage appearing or moving away from 0
         if volts > 0 and (widget.volts == nil or widget.volts == 0) then
             widget.cellCheckTime = getSysTime() + widget.cellCheckDelay
         end
@@ -450,6 +460,7 @@ local function wakeup(widget)
         crankVoltageAlerts(widget)
     end
 
+    -- initial full cell check is never skipped/muted
     crankFullChellCheck(widget)
 end
 
