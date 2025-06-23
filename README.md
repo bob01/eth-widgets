@@ -32,7 +32,7 @@ Summary screen<br>
 ![image](https://github.com/user-attachments/assets/2437e345-9da1-4442-8c6f-a43d43875b52)
 ![image](https://github.com/user-attachments/assets/4c5aaa3b-3ba9-4e2e-a45b-b61b04e63e4f)
 ![image](https://github.com/user-attachments/assets/30124be1-ad9e-4462-bdab-246ac1048a00)
-![image](https://github.com/user-attachments/assets/8e4a2b0d-acaa-4d7a-9f64-0b28eeff24f4)
+![image](https://github.com/user-attachments/assets/ffad7df1-ab40-4303-ade2-8f260078dbbb)
 
 ### Features
 - does voice callouts every 10% or 1% callouts if below low capacity threshold (default is 10%)
