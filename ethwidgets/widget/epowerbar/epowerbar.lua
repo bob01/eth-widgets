@@ -89,7 +89,7 @@ local function create()
         low = 10,
 
         -- initial voltage check
-        cellFull = 416,
+        cellFull = 412,
         cellFullCheckTime = nil,
         cellFullCheckDelay = 8000,
         cellFullReCheckDelay = 10000,
@@ -558,7 +558,7 @@ local function configure(widget)
     line = panel:addLine("Full cell voltage (v)")
     field = form.addNumberField(line, nil, 0, 480, function() return widget.cellFull end, function(value) widget.cellFull = value end)
     field:suffix("v")
-    field:default(416)
+    field:default(412)
     field:decimals(2)
 
     line = panel:addLine("Low cell voltage (v)")
@@ -617,7 +617,7 @@ local function read(widget)
         widget.cellFull = storage.read("cellFull")
         widget.calmLowCapaAlert = storage.read("calmLowCapaAlert")
     else
-        widget.cellFull = 416       -- default to lipo
+        widget.cellFull = 412       -- default to lipo
         widget.calmLowCapaAlert = false
     end
 
