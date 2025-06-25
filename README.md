@@ -24,6 +24,8 @@ Summary screen<br>
 - Rotorflight Lua Suite for Ethos (https://github.com/rotorflight/rotorflight-lua-ethos-suite)
 
 ### Release notes
+- 2025.06.24 - v1.0.5-rc2 - animated bar during startup
+- 2025.06.22 - v1.0.4 - check if pack is fully charged on connection 
 - 2025.06.04 - v1.0.3 - minor updates for RotorFlight 2.2.x
 - 2025.02.06 - initial release
 
@@ -43,7 +45,7 @@ Summary screen<br>
 - allows specification of a "reserve" %. In that case pilot flys to 0, bar goes red if pilot chooses to go further
 - critial alerts will be accompanied by a haptic vibe
 - voltage alerts when cell voltages below low or critical thresholds can be always on or based on a condition
-- low voltage alert a few seconds (8s) after a new pack is connected if it is not fully charged, bar will be orange in this condition meaning proceed with caution
+- low voltage alert a few seconds (startup delay ~10s) after a new pack is connected if it is not fully charged, bar will be orange in this condition meaning proceed with caution
 
 ### Settings
 ![image](https://github.com/user-attachments/assets/2f49aa7b-116e-4d1e-ad78-8a28c4bd4f5f)
