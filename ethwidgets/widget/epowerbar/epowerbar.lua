@@ -179,7 +179,7 @@ local function paint(widget)
     if widget.textVolts then
         lcd.font(widget.minimal and FONT_XL or FONT_L_BOLD)
         local _, text_h = lcd.getTextSize("")
-        lcd.drawText(box_left + 8, 12, widget.textVolts)
+        lcd.drawText(box_left + 8, 10, widget.textVolts)
     end
 
     -- mah
