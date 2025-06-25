@@ -72,6 +72,9 @@ local function create()
         inactiveAt = 0,
         textColor = BLACK,
 
+        -- startup
+        startupDelay = 10000,
+
         -- pre-rendered text
         textVolts = nil,
         textMah = nil,
@@ -91,9 +94,9 @@ local function create()
         -- initial voltage check
         cellFull = 412,
         cellFullCheckTime = nil,
-        cellFullCheckDelay = 8000,
         cellFullReCheckDelay = 10000,
         cellFullCheckColor = BAR_COLOR_OK,
+        cellFullCheckProgress = 0,
 
         -- alerts
         alertActiveCondition = system.getSource(CATEGORY_ALWAYS_ON),
@@ -150,8 +153,13 @@ local function paint(widget)
     lcd.drawFilledRectangle(box_left, box_top, box_width, box_height)
 
     -- bar
-    if widget.fuel then
-        local fill = widget.fuel > 0 and widget.fuel or 100
+    if widget.fuel and widget.volts > 0 then
+        local fill
+        if widget.cellFullCheckTime == nil then
+            fill = widget.fuel > 0 and widget.fuel or 100
+        else
+            fill = widget.cellFullCheckProgress < 100 and widget.cellFullCheckProgress or 100
+        end
         local bar_width = math.floor((((box_width - 2) / 100) * fill) + 2)
         lcd.color(getBarColor(widget))
         lcd.drawFilledRectangle(box_left, box_top, bar_width, box_height)
@@ -333,9 +341,14 @@ local function crankCellFullCheck(widget)
         return
     end
 
-    -- bail if in delay
+    -- calc progress and bail if in delay
     local now = getSysTime()
     if now < widget.cellFullCheckTime then
+        local progress = 100 - ((widget.cellFullCheckTime - now) * 100 / widget.startupDelay)
+        if widget.cellFullCheckProgress ~= progress then
+            widget.cellFullCheckProgress = progress
+            lcd.invalidate()
+        end
         return
     end
     widget.cellFullCheckTime = nil
@@ -414,7 +427,8 @@ local function wakeup(widget)
     if volts and widget.volts ~= volts then
         -- arm cell check if full check enabled and voltage appearing or moving away from 0
         if widget.cellFull > 0 and volts > 0 and (widget.volts == nil or widget.volts == 0) then
-            widget.cellFullCheckTime = getSysTime() + widget.cellFullCheckDelay
+            widget.cellFullCheckTime = getSysTime() + widget.startupDelay
+            widget.cellFullCheckProgress = 0
         end
 
         widget.volts = volts
@@ -573,6 +587,11 @@ local function configure(widget)
     field:default(330)
     field:decimals(2)
 
+    line = panel:addLine("Startup delay (s)")
+    field = form.addNumberField(line, nil, 1, 20, function() return widget.startupDelay / 1000 end, function(value) widget.startupDelay = value * 1000 end)
+    field:suffix("s")
+    field:default(10)
+
     line = panel:addLine("Sample duration (s)")
     field = form.addNumberField(line, nil, 1, 20, function() return widget.alertSampleDuration / 100 end, function(value) widget.alertSampleDuration = value * 100 end)
     field:suffix("s")
@@ -621,12 +640,18 @@ local function read(widget)
         widget.calmLowCapaAlert = false
     end
 
+    -- v3
+    if version >= 3 then
+        widget.startupDelay = storage.read("startupDelay")
+    else
+        widget.startupDelay = 10000
+    end
 end
 
 
 -- save config
 local function write(widget)
-    storage.write("version", 2)
+    storage.write("version", 3)
 
     storage.write("voltageSensor", widget.voltageSensor)
     storage.write("mahSensor", widget.mahSensor)
@@ -648,6 +673,9 @@ local function write(widget)
     -- v2
     storage.write("cellFull", widget.cellFull)
     storage.write("calmLowCapaAlert", widget.calmLowCapaAlert)
+
+    -- v3
+    storage.write("startupDelay", widget.startupDelay)
 end
 
 
