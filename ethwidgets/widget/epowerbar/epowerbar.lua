@@ -99,7 +99,7 @@ local function create()
         cellFullCheckProgress = 0,
 
         -- alerts
-        alertActiveCondition = system.getSource(CATEGORY_ALWAYS_ON),
+        alertActiveCondition = system.getSource({ category = CATEGORY_ALWAYS_ON, member = 1, options = 0 }),
         alertCellLow = 345,
         alertCellCitical = 330,
         alertPending = 0,
