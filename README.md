@@ -24,7 +24,7 @@ Summary screen<br>
 - Rotorflight Lua Suite for Ethos (https://github.com/rotorflight/rotorflight-lua-ethos-suite)
 
 ### Release notes
-- 2025.06.24 - v1.0.5-rc2 - animated bar during startup
+- 2025.06.24 - v1.0.5 - animated progress bar during startup full battery check, default voltage alert active condition fix
 - 2025.06.22 - v1.0.4 - check if pack is fully charged on connection 
 - 2025.06.04 - v1.0.3 - minor updates for RotorFlight 2.2.x
 - 2025.02.06 - initial release
