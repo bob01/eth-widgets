@@ -449,6 +449,7 @@ local function create()
     local widget =
     {
         -- sensors
+        teleSensor = system.getSource({ category = CATEGORY_SYSTEM_EVENT, member = TELEMETRY_ACTIVE }),
         sensorArm = system.getSource("Arming Flags")            or system.getSource({ category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5122 }),
         sensorArmDisabled = system.getSource("Arming Disable")  or system.getSource({ category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5123 }),
         sensorGov = system.getSource("Governor")                or system.getSource({ category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5125 }) or system.getSource("Governor Flags"),
@@ -601,20 +602,8 @@ end
 
 -- process sensors, pre-render and announce
 local function wakeup(widget)
-    -- nil CATEGORY_NONE sensors
-    -- widget.sensorArm            = nilNoneSource(widget.sensorArm)
-    -- widget.sensorArmDisabled    = nilNoneSource(widget.sensorArmDisabled)
-    -- widget.sensorGov            = nilNoneSource(widget.sensorGov)
-    -- widget.sensorThr            = nilNoneSource(widget.sensorThr)
-    -- widget.sensorEscSig         = nilNoneSource(widget.sensorEscSig)
-    -- widget.sensorEscFlags       = nilNoneSource(widget.sensorEscFlags)
-    -- widget.sensorStabGain       = nilNoneSource(widget.sensorStabGain)
-    -- widget.sensorStabMode       = nilNoneSource(widget.sensorStabMode)
-
     -- telemetry active?
-    local active = widget.sensorArm and
-                    ((widget.sensorArm:category() == CATEGORY_TELEMETRY_SENSOR and widget.sensorArm:state()) or
-                     (widget.sensorArm:category() == CATEGORY_LOGIC_SWITCH))
+    local active = widget.teleSensor and widget.teleSensor:state()
     if widget.active ~= active then
         widget.active = active
         lcd.invalidate()
@@ -624,8 +613,8 @@ local function wakeup(widget)
         -- TODO connected stuff ####
 
         -- armed?
-        local val = widget.sensorArm and widget.sensorArm:value()
         local armed
+        local val = widget.sensorArm and widget.sensorArm:value()
         if widget.sensorArm:category() == CATEGORY_TELEMETRY_SENSOR then
             armed = val and (val & 0x01) == 0x01
         else

@@ -50,6 +50,7 @@ local function create()
     local widget =
     {
         -- sensors
+        teleSensor = system.getSource({ category = CATEGORY_SYSTEM_EVENT, member = TELEMETRY_ACTIVE }),
         voltageSensor = system.getSource("Voltage")     or system.getSource({ category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0210 }) or system.getSource("VFAS") or system.getSource("ESC voltage"),
         cellsSensor = system.getSource("Cell Count")    or system.getSource({ category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5260 }),
         mahSensor = system.getSource("Consumption")     or system.getSource({ category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5250 }) or system.getSource("Capa") or system.getSource("ESC consumption") or system.getSource("mAh"),
@@ -382,7 +383,7 @@ end
 -- process sensors, pre-render and announce
 local function wakeup(widget)
     -- telemetry active?
-    local active = widget.voltageSensor and widget.voltageSensor:state()
+    local active = widget.teleSensor and widget.teleSensor:state()
     if widget.active ~= active then
         widget.active = active
 
