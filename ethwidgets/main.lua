@@ -21,7 +21,7 @@
 -- Date: 2024, 2025
 
 -- Collection of layouts and widgets for the ETHOS operating system
-local version = "v1.0.5-00023"
+local version = "v1.0.6-rc1"
 
 
 -- initialize / register layouts and widgets
