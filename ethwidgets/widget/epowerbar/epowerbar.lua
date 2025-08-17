@@ -154,7 +154,7 @@ local function paint(widget)
     lcd.drawFilledRectangle(box_left, box_top, box_width, box_height)
 
     -- bar
-    if widget.fuel and widget.volts > 0 then
+    if widget.fuel and widget.volts and widget.volts > 0 then
         local fill
         if widget.cellFullCheckTime == nil then
             fill = widget.fuel > 0 and widget.fuel or 100
