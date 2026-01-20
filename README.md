@@ -24,6 +24,7 @@ Summary screen<br>
 - Rotorflight Lua Suite for Ethos (https://github.com/rotorflight/rotorflight-lua-ethos-suite)
 
 ### Release notes
+- 2026.01.19 - v1.0.7 - required for Rotorflight Lua Suite for Ethos version Snapshot 2.3.0-20260118 or later
 - 2025.09.02 - v1.0.6 - fixed npe@157, streamlined telemetry connection detection
 - 2025.06.24 - v1.0.5 - animated progress bar during startup full battery check, default voltage alert active condition fix
 - 2025.06.22 - v1.0.4 - check if pack is fully charged on connection 
