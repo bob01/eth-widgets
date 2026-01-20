@@ -50,8 +50,14 @@ local textAlignment = {
 
 -- ctor
 local function create()
+    -- get rfSuite module
+    local rfsuite = require("rfsuite")
+
     local widget =
     {
+        -- get module
+        rfsuite = rfsuite,
+
         -- options
         useFblParams = rfsuite and rfsuite.session ~= nil,
         textAlignment = TEXT_CENTERED,
@@ -117,7 +123,7 @@ local function wakeup(widget)
     -- craft name
     if widget.useFblParams then
         -- use rfsuite
-        local craftName = rfsuite.session ~= nil and rfsuite.session.craftName or nil
+        local craftName = widget.rfsuite.session ~= nil and widget.rfsuite.session.craftName or nil
         if craftName and widget.craftName ~= craftName then
             widget.craftName = craftName
             lcd.invalidate()
@@ -148,7 +154,7 @@ end
 
 -- config UI
 local function configure(widget)
-    local craftNameAvailable = rfsuite and rfsuite.session ~= nil
+    local craftNameAvailable = widget.rfsuite and widget.rfsuite.session ~= nil
     local line = form.addLine("Use RotorFlight name / image")
     local field = form.addBooleanField(line, nil, function() return craftNameAvailable and widget.useFblParams end, function(value) widget.useFblParams = value end)
     field:enable(craftNameAvailable)
