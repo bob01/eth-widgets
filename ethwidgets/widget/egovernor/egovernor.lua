@@ -669,7 +669,7 @@ local function wakeup(widget)
                     govStatus = "DISARMED";
                 end
             else
-                if gov < #govStates then
+                if gov <= #govStates then
                     govStatus = govStates[gov]
                 else
                     govStatus = "UNKNOWN("..gov..")"
