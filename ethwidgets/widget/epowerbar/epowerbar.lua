@@ -43,6 +43,7 @@ local BAR_COLOR_LOW         = lcd.RGB(0xff, 0xff, 0x00)
 local BAR_COLOR_CRITICAL    = lcd.RGB(0xff, 0x00, 0x00)
 local BAR_COLOR_CHECK       = lcd.RGB(0xb8, 0xb8, 0xb8)
 local BAR_COLOR_BACKGROUND  = lcd.RGB(0xc8, 0xc8, 0xc8)
+local BAR_COLOR_LINE        = lcd.RGB(160, 160, 160)
 
 
 -- ctor
@@ -165,7 +166,7 @@ local function paint(widget)
         lcd.color(getBarColor(widget))
         lcd.drawFilledRectangle(box_left, box_top, bar_width, box_height)
 
-        lcd.color(lcd.RGB(160, 160, 160))
+        lcd.color(BAR_COLOR_LINE)
         lcd.drawLine(box_left + bar_width, box_top, box_left + bar_width, box_top + box_height)
     end
 
@@ -392,6 +393,8 @@ local function wakeup(widget)
 
         local now = getSysTime()
         if active then
+            -- skip initial report
+            widget.nextCapa = 0
             -- force cellcheck if inactive for greater than cellFullReCheckDelay
             if now > widget.inactiveAt + widget.cellFullReCheckDelay then
                 widget.cellFullCheckColor = BAR_COLOR_OK
