@@ -551,7 +551,7 @@ end
 
 
 local govStates = {
-    [0] = "OFF",
+    "OFF",
     "IDLE",
     "SPOOLUP",
     "RECOVERY",
@@ -563,7 +563,7 @@ local govStates = {
 }
 
 local armDisabledDescs = {
-    [0] = "NOGYRO",
+    "NOGYRO",
     "FAILSAFE",
     "RXLOSS",
     "BADRX",
@@ -655,7 +655,7 @@ local function wakeup(widget)
                     for i = 1, #armDisabledDescs do
                         local bit = i - 1
                         if (armf & (1 << bit)) ~= 0 then
-                            local desc = armDisabledDescs[bit]
+                            local desc = armDisabledDescs[bit + 1]
                             local len = string.len(govStatus)
                             if len + string.len(desc) + 1 > 18 then
                                 govStatus = govStatus.." +"
@@ -669,8 +669,9 @@ local function wakeup(widget)
                     govStatus = "DISARMED";
                 end
             else
-                if gov <= #govStates then
-                    govStatus = govStates[gov]
+                local idx = gov + 1
+                if idx <= #govStates then
+                    govStatus = govStates[idx]
                 else
                     govStatus = "UNKNOWN("..gov..")"
                 end
