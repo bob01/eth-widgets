@@ -18,7 +18,7 @@
 #########################################################################
 ]]
 -- Author: Rob Gayle (bob00@rogers.com)
--- Date: 2024, 2025
+-- Date: 2024 - 2026
 local version = nil
 
 -- metadata
@@ -61,7 +61,7 @@ local function create()
         minimal = false,
 
         -- pack
-        cellCount = 6,
+        cellCount = 0,
         capacity = 5000,
 
         -- state
@@ -381,6 +381,21 @@ local function nilNoneSource(source)
     end
 end
 
+local function cellsFromVolts(widget, volts)
+    -- for 1 to 4 and 6 cells only
+    for cells = 1, 6 do
+        if cells ~= 5 then
+            -- skip 5 cell
+            if volts >= 3.3 * cells and volts <= 4.35 * cells then
+                -- likely cell count
+                return cells
+            end
+        end
+    end
+    -- unknown
+    return 0
+end
+
 -- process sensors, pre-render and announce
 local function wakeup(widget)
     -- telemetry active?
@@ -413,9 +428,13 @@ local function wakeup(widget)
     if widget.cellsSensor then
         -- use sensor cell count
         cells = widget.cellsSensor:value()
-    else
+    elseif widget.cellCount > 0 then
         -- use configured cell count
         cells = widget.cellCount
+    elseif widget.cellCount == 0 then
+        -- try to figure out from voltage
+        local volts = widget.voltageSensor and widget.voltageSensor:value() or 0
+        cells = cellsFromVolts(widget, volts)
     end
     if cells and widget.cells ~= cells then
         widget.cells = cells
@@ -532,7 +551,7 @@ local function configure(widget)
 
     -- Cell count
     line = form.addLine("Cell count")
-    field = form.addNumberField(line, nil, 2, 16, function() return widget.cellCount end, function(value) widget.cellCount = value end)
+    field = form.addNumberField(line, nil, 0, 16, function() return widget.cellCount end, function(value) widget.cellCount = value end)
     field:suffix("s")
     field:default(6)
     field:enable(widget.cellsSensor == nil)

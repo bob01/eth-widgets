@@ -19,7 +19,7 @@
 ]]
 -- Author: Rob Gayle (bob00@rogers.com)
 -- Thanks to Rob Thomson for the rfSuite interop
--- Date: 2025
+-- Date: 2024 - 2026
 local version = nil
 
 -- metadata

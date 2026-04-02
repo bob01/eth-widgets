@@ -18,10 +18,10 @@
 #########################################################################
 ]]
 -- Author: Rob Gayle (bob00@rogers.com)
--- Date: 2024, 2025
+-- Date: 2024 - 2026
 
 -- Collection of layouts and widgets for the ETHOS operating system
-local version = "v1.0.8"
+local version = "v1.0.9"
 
 
 -- initialize / register layouts and widgets
