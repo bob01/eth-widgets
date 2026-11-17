@@ -27,7 +27,8 @@ local function init(ver)
     local sy
     local sw
     local sh
-    local sp = 8
+    local sp = 4
+    local tsp = 4
     local trimx
     local trimy
     local trimw
@@ -42,6 +43,7 @@ local function init(ver)
       -- X20S family (800x480)
       sy = 95
       sh = 336
+      sp = 8
       trimx = 40
       trimy = 40
       trimw = sw / 2.65
@@ -119,7 +121,7 @@ local function init(ver)
     local tx = trimx
     local ty = sy
     local tw = sw - trimx * 2
-    local th = sh - trimy + sp
+    local th = sh - trimy
     local cwl = tw * 2 / 3
     local ch = th / 4
 
@@ -174,18 +176,15 @@ local function init(ver)
     trims[#trims + 1] =     { x = x,         y = y,        w = w,              h = trimy }
     -- throttle
     x = sx
-    y = sy + sp * 2
-    local h = th
+    y = sy + tsp * 2
+    local h = th - tsp * 4
     trims[#trims + 1] =     { x = x,         y = y,        w = trimx,          h = h }
     -- elevator
     x = sx + sw - trimx
-    y = sy + sp * 2
-    h = th
     trims[#trims + 1] =     { x = x,         y = y,        w = trimx,          h = h }
     -- aileron
-    x = sw - (trimw + sp)
+    x = sw - (trimw + trimx + sp)
     y = ty + th - sp
-    w = (tw - trimx) / 2
     trims[#trims + 1] =     { x = x,         y = y,        w = w,              h = trimy }
 
     -- register
